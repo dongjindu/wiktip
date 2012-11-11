@@ -261,8 +261,6 @@ public class MWindow {
         //throw new UnsupportedOperationException("Not yet implemented");
         JScrollPane ppara = (JScrollPane) hm.get("sp");
         JScrollPane pstatus = new JScrollPane(table);
-        //pstatus.setLayout(new BorderLayout());
-        //pstatus.add(new JScrollPane(table), BorderLayout.CENTER);
         table.setSize(pstatus.getWidth()-10, pstatus.getHeight()-10);
         TableColumn column = table.getColumnModel().getColumn(1);
         column.setCellRenderer(new ProgressRenderer());
