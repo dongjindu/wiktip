@@ -6,6 +6,11 @@
 package org.wiktionary;
 
 import java.awt.*;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusListener;
+import java.awt.event.FocusEvent;
 import javax.swing.*;
 import java.io.*;
 import java.sql.*;
@@ -18,13 +23,12 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.JSplitPane;
 import java.util.List;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
-import org.jdesktop.swingx.MultiSplitLayout;
-import org.jdesktop.swingx.MultiSplitLayout.Leaf;
-import org.jdesktop.swingx.MultiSplitLayout.Divider;
-import org.jdesktop.swingx.MultiSplitLayout.Split;
-import org.jdesktop.swingx.MultiSplitPane;
+import javax.swing.ScrollPaneLayout;
+import javax.swing.ScrollPaneConstants;
 
 public class MWindow {
     private DAO dao = new DAO();
@@ -52,7 +56,7 @@ public class MWindow {
     private     Integer m0[] = new Integer[5];
     
     private void addComponents() {
-        JPanel p = new JPanel();
+        final JPanel p = new JPanel();
 //        Container p = f.getContentPane();
         JScrollPane sp = new JScrollPane(p);
         //f.getContentPane().add(BorderLayout.CENTER, sp);
@@ -69,7 +73,7 @@ public class MWindow {
         JLabel lmaxitem50 = new JLabel("Max items for top 50 words");
         JLabel lmaxitem500 = new JLabel("Max items for top 500 words");
         JLabel lmaxitem = new JLabel("Max items for other words");
-        JLabel lranklevel = new JLabel("Rank or sort");
+        JLabel lranklevel = new JLabel("Rank Level");
         JLabel lwordlist = new JLabel("Word list input file");
         lwordlist.setForeground(Color.blue);
         JLabel lhtmldir = new JLabel("HTML directory name");
@@ -97,15 +101,15 @@ public class MWindow {
         tranklevel.setEditable(false);
         tranklevel.addActionListener(tranklevel);
 
-        JTextField twordlist = new JTextField((Res.getProp().getString("wordlist") == null) ? "" : Res.getProp().getString("wordlist"));
-        JTextField thtmldir = new JTextField((Res.getProp().getString("htmldir") == null) ? "html" : Res.getProp().getString("htmldir"));
-        JTextField tdictdir = new JTextField((Res.getProp().getString("dictdir") == null) ? "dict" : Res.getProp().getString("dictdir"));
-        JTextField tdbdir = new JTextField((Res.getProp().getString("dbdir") == null) ? "db" : Res.getProp().getString("dbdir"));
+        final JTextField twordlist = new JTextField((Res.getProp().getString("wordlist") == null) ? "" : Res.getProp().getString("wordlist"));
+        final JTextField thtmldir = new JTextField((Res.getProp().getString("htmldir") == null) ? "html" : Res.getProp().getString("htmldir"));
+        final JTextField tdictdir = new JTextField((Res.getProp().getString("dictdir") == null) ? "dict" : Res.getProp().getString("dictdir"));
+        final JTextField tdbdir = new JTextField((Res.getProp().getString("dbdir") == null) ? "db" : Res.getProp().getString("dbdir"));
         
-        JButton runbutton = new JButton("Run");
-        JButton savebutton = new JButton("Save");
-        JButton saveexitbutton = new JButton("Save and Exit");
-        JButton exitbutton = new JButton("Exit");
+        final JButton runbutton = new JButton("Run");
+        final JButton savebutton = new JButton("Save");
+        final JButton saveexitbutton = new JButton("Save and Exit");
+        final JButton exitbutton = new JButton("Exit");
 
         GridBagConstraints c = new GridBagConstraints();
         Insets insets0 = new Insets(5, 50, 5, 5);
@@ -208,6 +212,7 @@ public class MWindow {
         runbutton.addActionListener(dal);
         saveexitbutton.addActionListener(dal);
         exitbutton.addActionListener(dal);
+        twordlist.addFocusListener(new FL(hm)); //Focus Listner is not the only way nor best way. but works right now.
     }
     public void makeUI(Container cp) {
         hm.put("cp", cp);
@@ -223,7 +228,7 @@ public class MWindow {
             System.out.println("Finally this is an Instance of JFrame?");
         };
 */
-        try {
+/*        try {
             dao.query("select word from voctxt limit 10 offset 1 ");
             rs = dao.executeQuery();
             while (rs.next()) {
@@ -231,7 +236,7 @@ public class MWindow {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        } 
+        } */
     }
     public String getAppName() {
         String appname = "";
@@ -260,14 +265,24 @@ public class MWindow {
     private void addTable() {
         //throw new UnsupportedOperationException("Not yet implemented");
         JScrollPane ppara = (JScrollPane) hm.get("sp");
-        JScrollPane pstatus = new JScrollPane(table);
-        table.setSize(pstatus.getWidth()-10, pstatus.getHeight()-10);
+        JPanel p = new JPanel(new BorderLayout());
+        JScrollPane pstatus = new JScrollPane(p);
+        p.add(table.getTableHeader(), BorderLayout.NORTH);
+        p.add(table,BorderLayout.CENTER);
+        
+        table.setSize(p.getWidth()-10, p.getHeight()-10);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.getColumnModel().getColumn(0).setPreferredWidth(100);
+        table.getColumnModel().getColumn(1).setPreferredWidth(500);
+        
         TableColumn column = table.getColumnModel().getColumn(1);
         column.setCellRenderer(new ProgressRenderer());
 
         JSplitPane splp = new JSplitPane(JSplitPane.VERTICAL_SPLIT, ppara, pstatus);
         splp.setDividerLocation(360 + splp.getInsets().top);
         ((Container) hm.get("cp")).add(BorderLayout.CENTER, splp);
+        
+        hm.put("table", table);
 /*
         JPanel pb2 = new JPanel(new FlowLayout());
         pb2.add( new JButton("status"));
@@ -300,9 +315,17 @@ class ProgressRenderer extends DefaultTableCellRenderer {
             text = "Error";
         } else if (i < 100) {
             b.setValue(i);
+            if (row == 0 ) {
+                b.setForeground(Color.green);
+            } else if (row%2 == 0) {
+                b.setForeground(Color.darkGray);
+            } else if (row%2 == 1) {
+                b.setForeground(Color.ORANGE);
+            }
             return b;
         }
         super.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
         return this;
     }
 }
+
