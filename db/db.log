@@ -1,0 +1,6 @@
+/*C2*/SET SCHEMA PUBLIC
+drop table voctxt if exists
+create text table voctxt (word varchar(50))
+set table voctxt source off
+set table voctxt source "voc.txt;encoding=UTF-8"
+DISCONNECT

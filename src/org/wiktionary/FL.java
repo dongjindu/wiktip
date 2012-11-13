@@ -32,7 +32,7 @@ public class FL implements FocusListener {
                 File inifile = new File(".");
 
                 if (((JTextField) hm.get("wordlist")).getText().length() > 0) {
-                    jfc = new JFileChooser(((JTextField) hm.get("wordlist")).getText());
+                    jfc = new JFileChooser(inifile.getAbsolutePath() +((JTextField) hm.get("dbdir")).getText());
                 } else {
                     jfc = new JFileChooser();
                 }
@@ -41,8 +41,9 @@ public class FL implements FocusListener {
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     try {
                         File file = jfc.getSelectedFile();
-                        ((JTextField) hm.get("wordlist")).setText(file.getCanonicalPath());
-                    } catch (IOException ex) {
+                        //((JTextField) hm.get("wordlist")).setText(file.getCanonicalPath());
+                        ((JTextField) hm.get("wordlist")).setText(file.getName());
+                    } catch (Exception ex) {
                         Logger.getLogger(MWindow.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }

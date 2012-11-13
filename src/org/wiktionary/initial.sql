@@ -1,7 +1,7 @@
 drop table voctxt;
 create text table voctxt (word varchar(50));
 set table voctxt source off;
-set table voctxt source "voc.txt";
+set table voctxt source "voc.txt;encoding=UTF-8";
 
 create database dictionary charset utf8;
 drop table voc;

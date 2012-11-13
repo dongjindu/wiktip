@@ -87,8 +87,7 @@ public class DAO {
         
     }
     
-    public synchronized boolean executeUpdate() {
-        
+    public synchronized boolean executeUpdate() throws DAOException {
         boolean flag = true;
         try {
             getPstmt().executeUpdate();
@@ -97,6 +96,7 @@ public class DAO {
         catch (SQLException sqle) {
             flag = false;
             System.out.println("executeUpdate() Error!" + sqle.toString() + getPstmt().toString());
+            throw new DAOException("DAOException of udpate:", sqle);
         }
         
         return flag;
@@ -113,24 +113,26 @@ public class DAO {
         }
     }
     
-    public synchronized ResultSet executeQuery() {
+    public synchronized ResultSet executeQuery() throws DAOException {
         rs = null;
         try {
             rs = getPstmt().executeQuery();
         }
         catch (SQLException sqle) {
             System.err.println("Query DataBase Fail! Error = " + sqle.toString());
+            throw new DAOException("DAO query exception:", sqle);
         }
         return rs;
     }
         
-    public synchronized void query(String expression) {
+    public synchronized void query(String expression) throws DAOException {
         pstmt = null;
         try {
             pstmt = conn.prepareStatement(expression);
         } 
         catch (SQLException sqle) {
             System.err.println("Query DataBase Fail! Error = " + sqle.toString() + " " + expression);
+            throw new DAOException("DAO query prepare exception", sqle);
         }
     }
     
@@ -204,5 +206,15 @@ public class DAO {
     private PreparedStatement getPstmt() {
         return pstmt; 
     }
-    
+}
+class DAOException extends Exception {
+  public DAOException() {
+  }
+ 
+  public DAOException(String msg) {
+    super(msg);
+  }
+  public DAOException(String msg, Exception e) {
+      super(msg, e);
+  }
 }
