@@ -6,11 +6,7 @@
 
 package org.wiktionary;
 
-import java.io.StringReader;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
 import java.sql.*;
 import org.apache.commons.configuration.*;
@@ -80,4 +76,13 @@ public class Res {
         InputSource is = new InputSource(new StringReader(xml));
         return builder.parse(is);
     }
+    public static Document loadXMLFromFile(File file) throws Exception
+    {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        InputSource is = new InputSource(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+        is.setEncoding("UTF-8");
+        return builder.parse(is);
+    }
+
 }

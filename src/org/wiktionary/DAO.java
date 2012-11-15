@@ -76,22 +76,22 @@ public class DAO {
         
     }
     
-    public synchronized void setString(int parameterIndex, String s) {
+    public synchronized void setString(int parameterIndex, String s) throws DAOException {
         
         try {
             getPstmt().setString(parameterIndex, s);
         }
         catch (SQLException sqle) {
             System.err.println(" pstmt.setString(parameterIndex, s) Fail! Error = " + sqle.toString() + " SQL state?" + getPstmt().toString());
+            throw new DAOException("DAOException setString:", sqle);
         }
-        
     }
     
     public synchronized boolean executeUpdate() throws DAOException {
         boolean flag = true;
         try {
             getPstmt().executeUpdate();
-//            System.err.println("Update informaiton:" + getPstmt().toString());
+            System.err.println("Update informaiton:" + getPstmt().toString());
         }
         catch (SQLException sqle) {
             flag = false;
@@ -147,13 +147,14 @@ public class DAO {
         }
     }
     
-    public synchronized void commit() {
+    public synchronized void commit() throws DAOException {
         
          try {
             conn.commit();
         }
         catch (SQLException sqle) {
             System.err.println(sqle.toString());
+            throw new DAOException("DAOException commit:", sqle);
         }
         
     }
@@ -182,7 +183,7 @@ public class DAO {
          try {
             if (conn == null) {
                 Class.forName(Res.DRIVER_NAME);
-                conn = DriverManager.getConnection(Res.DATABASE_ADDRESS, Res.getProp().getString("dbusername"), Res.getProp().getString("dbpassword"));
+                conn = DriverManager.getConnection(Res.DATABASE_ADDRESS + ";shutdown=true", Res.getProp().getString("dbusername"), Res.getProp().getString("dbpassword"));
             }
             System.out.println("Connect DB Success: " + Res.DATABASE_ADDRESS + ". Account: " +
                    Res.getProp().getString("dbusername") + ", password: " + Res.getProp().getString("dbpassword") + ".");

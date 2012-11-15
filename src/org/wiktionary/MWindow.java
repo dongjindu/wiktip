@@ -36,7 +36,7 @@ public class MWindow {
     private HashMap<String, Object> hm = new HashMap();
     
     private String[] columnNames = {"Task groups", "Status"};
-    private Object[][] data = {{"dummy", 100}};
+    private Object[][] data = {{"Overall progress", 0}};
     private static final Integer pslock = 1;
     
     private DefaultTableModel model = new DefaultTableModel(data, columnNames) {
@@ -99,7 +99,7 @@ public class MWindow {
             tranklevel.setSelectedItem(0);
         }
         tranklevel.setEditable(false);
-        tranklevel.addActionListener(tranklevel);
+        //tranklevel.addActionListener(tranklevel);
 
         final JTextField twordlist = new JTextField((Res.getProp().getString("wordlist") == null) ? "" : Res.getProp().getString("wordlist"));
         final JTextField thtmldir = new JTextField((Res.getProp().getString("htmldir") == null) ? "html" : Res.getProp().getString("htmldir"));
@@ -282,6 +282,7 @@ public class MWindow {
         splp.setDividerLocation(360 + splp.getInsets().top);
         ((Container) hm.get("cp")).add(BorderLayout.CENTER, splp);
         
+        hm.put("model", model);
         hm.put("table", table);
 /*
         JPanel pb2 = new JPanel(new FlowLayout());

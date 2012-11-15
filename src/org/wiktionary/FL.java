@@ -20,14 +20,14 @@ import javax.swing.JTextField;
 public class FL implements FocusListener {
     private HashMap hm;
     private JTextField tf;
-    private static int go = 0;
+//    private static int go = 0;
     public FL(HashMap h) {
         hm = h;
     }
     
     public void  focusGained(FocusEvent fe) {
         try {
-            if (go%3 == 0 ) {
+            if (((Object) fe.getOppositeComponent()) != null ) {
                 JFileChooser jfc;
                 File inifile = new File(".");
 
@@ -47,15 +47,15 @@ public class FL implements FocusListener {
                         Logger.getLogger(MWindow.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                ((JTextField) hm.get("htmldir")).requestFocusInWindow();
+                //((JTextField) hm.get("htmldir")).requestFocusInWindow();
             }
-            go = (go + 1) % 3;
+//            go = (go + 1) % 3;
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
     public void focusLost(FocusEvent fe) {
-           ((JTextField) hm.get("htmldir")).requestFocusInWindow();
+           //((JTextField) hm.get("htmldir")).requestFocusInWindow();
         //do nothing
     }
 }
