@@ -30,20 +30,28 @@ import org.lobobrowser.html.gui.*;
 import org.lobobrowser.html.parser.*;
 import org.lobobrowser.html.test.*;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Node;
+//import org.w3c.dom.Node;
+import org.jsoup.parser.Parser;
+import org.jsoup.select.Elements;
+
+
 public class HGetter {
     private String word;
     private static HashMap<String, Object> hm;
-    private Document doc;
-    private String path;
+    private org.w3c.dom.Document doc;
+    private String htmlpath;
+    private org.jsoup.nodes.Document jsoupdoc;
     
     public HGetter(String pword, HashMap<String, Object> phm) {
         if (hm == null) { hm = phm; }
         word = pword;
-        path = ((JTextField) hm.get("htmldir")).getText();
+        htmlpath = ((JTextField) hm.get("htmldir")).getText();
     }
     public void getHtml() throws Exception {
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        Result output = new StreamResult(new File(path + "\\" + word + ".html"));
+        Result output = new StreamResult(new File(htmlpath + "\\" + word + ".html"));
         //Logger.getLogger("org.lobobrowser").setLevel(Level.OFF);
         // Open a connection on the URL we want to render first.
         //String uri = "http://lobobrowser.org/browser/home.jsp";
@@ -80,30 +88,97 @@ public class HGetter {
 
     void getImageAndCount() throws Exception {
         //throw new UnsupportedOperationException("Not yet implemented");
-        if (doc == null) {
-            openDoc();
-            if (doc == null) {throw new Exception("Cannot find html source. Inconsistant status in DB...");}
+        if (jsoupdoc == null) {
+            openJsoupDoc();
+            if (jsoupdoc == null) {throw new Exception("Cannot find html source. Inconsistant status in DB...");}
         }
-        doc.get
-        URL website = new URL("http://www.website.com/information.asp");
-        ReadableByteChannel rbc = Channels.newChannel(website.openStream());
-        FileOutputStream fos = new FileOutputStream("information.html");
-        fos.getChannel().transferFrom(rbc, 0, 1 << 24);
+        DAO dao = new DAO();
+        Elements images = jsoupdoc.select("img.thumbimage");
+        for (int i=0; i < images.size(); i++) {
+            String uri = images.get(i).attr("src");
+            URL url = new URL("http:" +uri);
+            ReadableByteChannel rbc = Channels.newChannel(url.openStream());
+            String ifn;
+            int si0 = uri.lastIndexOf('/');
+            int si1 = uri.substring(0, si0 - 1).lastIndexOf('/');
+            if (uri.substring(si0).equals( "/" )) {
+                ifn = uri.substring(si1+1, si0);
+            } else {
+                ifn = uri.substring(si0+1, uri.length());
+            }
+            FileOutputStream fos = new FileOutputStream(htmlpath + "\\image\\" + ifn);
+            fos.getChannel().transferFrom(rbc, 0, 1 << 24);
+            synchronized (DAO.daolock) {
+                dao.update("insert into voc3 (word, sn1, sn2, sn3, sn4, type, imageurl, image) "
+                        + "values(?, ?, ?, ?, ?, ?, ?, ?)");
+                dao.setString(1, word);
+                dao.setInt(2, i + 100); //Only for image
+                dao.setInt(3, 0);
+                dao.setInt(4, 0);
+                dao.setInt(5, 0);
+                dao.setInt(6, 3);
+                dao.setString(7, uri);
+                dao.setString(8, ifn);
+                dao.executeUpdate();
+            }
+        }
+        synchronized (DAO.daolock) {
+            dao.update("update voc set imaged = ? where word = ?");
+            dao.setBoolean(1, true);
+            dao.setString(2, word);
+            dao.executeUpdate();
+        }
         //doc
     }
 
     void getXed() throws Exception{
         //throw new UnsupportedOperationException("Not yet implemented");
-        if (doc == null) {
-            openDoc();
-            if (doc == null) {throw new Exception("Cannot find html source. Inconsistant status in DB...");}
+        if (jsoupdoc == null) {
+            openJsoupDoc();
+            if (jsoupdoc == null) throw new Exception("Cannot find html source. Inconsistant status in DB...");
+        }
+        Elements es = jsoupdoc.select("span.tocnumber"); //tocnumber elements
+        String roottocnumber = null;
+        String[][] toc = new String[3][es.size()];
+        int n0 = 0;
+        int sn1 = 0, sn2 = 0, sn3 = 0, sn4 = 0;
+        loops:
+        {
+            for (int i = 0; i < es.size(); i++) {
+                org.jsoup.nodes.Element e = es.get(i);
+                Elements e1s = es.get(i).siblingElements();
+                //tocnumbers[i] = es.get(i).
+                if (roottocnumber != null) {
+                    if (es.get(i).html().substring(0,2).equals(roottocnumber + ".")) {
+                        n0 = n0 + 1;
+                        toc[0][n0] = es.get(i).html();
+                        if () {
+                            
+                        }
+                    }
+                }
+                for (int i1 = 0; i1 < e1s.size(); i1++) {
+                    if (roottocnumber == null && e1s.get(i1).attr("class").equals("toctext")
+                            && e1s.get(i1).html().equalsIgnoreCase("English")) {
+                        roottocnumber = es.get(i).html();
+                        break;
+                    }
+                    if (roottocnumber != null) {
+                        if (e1s.get(i1).html().equalsIgnoreCase("Pronunciation")
+                                && e1s.get(i1).html().equals("")){
+                            
+                        }
+                    }
+                }
+            }
         }
     }
 
-    private void openDoc() {
+    private void openJsoupDoc() {
         try {
             //throw new UnsupportedOperationException("Not yet implemented");
-            doc = Res.loadXMLFromFile(new File(path + "\\" + word + ".html"));
+            File input = new File( htmlpath + "\\" + word + ".html");
+            jsoupdoc = Jsoup.parse(input, "UTF-8");
         } catch (FileNotFoundException ex) {
             Logger.getLogger(HGetter.class.getName()).log(Level.SEVERE, null, ex);
         } catch (UnsupportedEncodingException uee) {

@@ -22,8 +22,10 @@ public class DAO {
     private static Connection conn;
     private PreparedStatement pstmt;
     private ResultSet rs;
+    public static Boolean daolock;
     
     static {
+        daolock = false;
         createConnection();
     }
     
@@ -35,6 +37,7 @@ public class DAO {
     public synchronized void setObject(int parameterIndex, Object x) {
         
         try {
+            if (daolock)
             getPstmt().setObject(parameterIndex, x);
         }
         catch (SQLException sqle) {
@@ -46,6 +49,7 @@ public class DAO {
     public synchronized void setBoolean(int parameterIndex, boolean flag) {
         
         try {
+            if (daolock)
             getPstmt().setBoolean(parameterIndex, flag);
         }
         catch (SQLException sqle) {
@@ -57,6 +61,7 @@ public class DAO {
     public synchronized void setDouble(int parameterIndex, double x) {
         
         try {
+            if (daolock)
             getPstmt().setDouble(parameterIndex, x);
         }
         catch (SQLException sqle) {
@@ -68,6 +73,7 @@ public class DAO {
     public synchronized void setInt(int parameterIndex, int x) {
         
         try {
+            if (daolock)
             getPstmt().setInt(parameterIndex, x);
         }
         catch (SQLException sqle) {
@@ -79,6 +85,7 @@ public class DAO {
     public synchronized void setString(int parameterIndex, String s) throws DAOException {
         
         try {
+            if (daolock)
             getPstmt().setString(parameterIndex, s);
         }
         catch (SQLException sqle) {
@@ -90,8 +97,14 @@ public class DAO {
     public synchronized boolean executeUpdate() throws DAOException {
         boolean flag = true;
         try {
-            getPstmt().executeUpdate();
-            System.err.println("Update informaiton:" + getPstmt().toString());
+            if (daolock) {
+                getPstmt().executeUpdate();
+                daolock = false;
+                System.err.println("Update informaiton:" + getPstmt().toString());
+                pstmt = null;
+            } else {
+                throw new DAOException("DAOException, sql statement not inited");
+            }
         }
         catch (SQLException sqle) {
             flag = false;
@@ -103,10 +116,15 @@ public class DAO {
         
     }
     
-    public synchronized void update(String expression) {
+    public synchronized void update(String expression) throws DAOException{
         pstmt = null;
         try {
-            pstmt = conn.prepareStatement(expression);
+            if (!daolock) {
+                pstmt = conn.prepareStatement(expression);
+                daolock = true;
+            } else {
+                throw new DAOException("Othser statemetn is waiting to be executed! " + pstmt.toString());
+            }
         } 
         catch (SQLException sqle) {
             System.err.println("Update DataBase Preparation Fail! Error = " + sqle.toString());
@@ -116,7 +134,13 @@ public class DAO {
     public synchronized ResultSet executeQuery() throws DAOException {
         rs = null;
         try {
-            rs = getPstmt().executeQuery();
+            if (daolock) {
+                rs = getPstmt().executeQuery();
+                daolock = false;
+                pstmt = null;
+            } else {
+                throw new DAOException("DAOException when query, sql statement not initiated");
+            }
         }
         catch (SQLException sqle) {
             System.err.println("Query DataBase Fail! Error = " + sqle.toString());
@@ -128,7 +152,12 @@ public class DAO {
     public synchronized void query(String expression) throws DAOException {
         pstmt = null;
         try {
-            pstmt = conn.prepareStatement(expression);
+            if (!daolock) {
+                pstmt = conn.prepareStatement(expression);
+                daolock = true;
+            } else {
+                throw new DAOException("Other statement is waiting to be executed!" + pstmt.toString());
+            }
         } 
         catch (SQLException sqle) {
             System.err.println("Query DataBase Fail! Error = " + sqle.toString() + " " + expression);

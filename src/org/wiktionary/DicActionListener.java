@@ -67,8 +67,8 @@ public class DicActionListener implements ActionListener {
         } else if (ae.getActionCommand().equals("Exit")) {
             //(JFrame) (((JComponent) ae.getSource()).getRootPane().getParent())
             DAO dao = new DAO();
-            dao.update("shutdown");
             try {
+                dao.update("shutdown");
                 dao.executeUpdate();
             } catch (DAOException ex) {
                 Logger.getLogger(DicActionListener.class.getName()).log(Level.SEVERE, null, ex);
@@ -79,8 +79,8 @@ public class DicActionListener implements ActionListener {
             saveprop(ae);
             createdir();
             DAO dao = new DAO();
-            dao.update("shutdown");
             try {
+                dao.update("shutdown");
                 dao.executeUpdate();
             } catch (DAOException ex) {
                 Logger.getLogger(DicActionListener.class.getName()).log(Level.SEVERE, null, ex);
@@ -269,7 +269,7 @@ public class DicActionListener implements ActionListener {
     }
     private void createdb() throws SQLException {
         try {
-            synchronized (pslock) {
+            synchronized (DAO.daolock) {
                 dao.update("drop table voctxt if exists");
                 dao.executeUpdate();
                 System.out.println("Looks like fresh run. Initializing whole local database!");
@@ -295,6 +295,26 @@ public class DicActionListener implements ActionListener {
                 dao.update("insert into voc (word, htmled, imaged, rank, xed, rank1000) "
                         + "select distinct(word), ?, ?, ?, ?, ? from voctxt");
                 dao.setBoolean(1, false); dao.setBoolean(2, false); dao.setInt(3, 0); dao.setInt(4, 0); dao.setBoolean(5, false);
+                dao.executeUpdate();
+                //type: 1: etym, 2, pron, 3:image, 4: meaning, 5:Virtual numbered meaning
+                dao.update("create cached table voc3(word varchar(50),"
+                        + "sn1 int,"
+                        + "sn2 int,"
+                        + "sn3 int,"
+                        + "sn4 int,"
+                        + "sn1c varchar(10),"
+                        + "sn2c varchar(10),"
+                        + "sn3c varchar(10),"
+                        + "sn4c varchar(10),"
+                        + "type int,"
+                        + "etym varchar(50),"
+                        + "pron varchar(50),"
+                        + "image varchar(50),"
+                        + "imageurl varchar(200),"
+                        + "antonyms varchar(100),"
+                        + "synomyms varchar(100),"
+                        + "meaning varchar(200),"
+                        + "primary key(word, sn1, sn2, sn3, sn4))");
                 dao.executeUpdate();
                 dao.update("create cached table etym( word varchar(50),"
                         + "sn int,"
