@@ -131,47 +131,161 @@ public class HGetter {
         //doc
     }
 
-    void getXed() throws Exception{
+    synchronized void getXed() throws Exception{
         //throw new UnsupportedOperationException("Not yet implemented");
         if (jsoupdoc == null) {
             openJsoupDoc();
             if (jsoupdoc == null) throw new Exception("Cannot find html source. Inconsistant status in DB...");
         }
         Elements es = jsoupdoc.select("span.tocnumber"); //tocnumber elements
-        String roottocnumber = null;
-        String[][] toc = new String[3][es.size()];
+        String r = null; //root tocnumber
+        String s = "", s1 = "";
+        String[] toc = new String[es.size()];
         int n0 = 0;
-        int sn1 = 0, sn2 = 0, sn3 = 0, sn4 = 0;
+        int[] osn = {0, 0, 0, 0, 0, 0};
+        int[] sn = {0, 0, 0, 0, 0, 0};
+        int[] lastosn = {0, 0, 0, 0, 0, 0};
+        int[] nextosn = {0, 0, 0, 0, 0, 0};
+        int[] lastsn = {0, 0, 0, 0, 0, 0};
         loops:
         {
             for (int i = 0; i < es.size(); i++) {
                 org.jsoup.nodes.Element e = es.get(i);
-                Elements e1s = es.get(i).siblingElements();
-                //tocnumbers[i] = es.get(i).
-                if (roottocnumber != null) {
-                    if (es.get(i).html().substring(0,2).equals(roottocnumber + ".")) {
-                        n0 = n0 + 1;
-                        toc[0][n0] = es.get(i).html();
-                        if () {
-                            
-                        }
-                    }
-                }
-                for (int i1 = 0; i1 < e1s.size(); i1++) {
-                    if (roottocnumber == null && e1s.get(i1).attr("class").equals("toctext")
-                            && e1s.get(i1).html().equalsIgnoreCase("English")) {
-                        roottocnumber = es.get(i).html();
+                String[] split = e.html().split("\\.");
+                String[] nextsplit;
+                String tocid = "", tocidfull = "";
+                Elements e1s = e.siblingElements();
+                /*for (int i2 = 0; i2 < e1s.size(); i2++) {
+                    if (e1s.get(i2).attr("class").equals("toctext")) {
+                        toc[i] = e1s.get(i2).html();
                         break;
                     }
-                    if (roottocnumber != null) {
-                        if (e1s.get(i1).html().equalsIgnoreCase("Pronunciation")
-                                && e1s.get(i1).html().equals("")){
-                            
+                }*/
+
+                //tocnumbers[i] = es.get(i).
+                if (r != null) {
+                    if (e.html().length() == r.length()
+                            && !(e.html().equals(r)) ) {break loops;}
+                    n0 = n0 + 1;
+                    Boolean movetree = false;
+                    s = "\n" +  e.html() + "::"; //This are the toc numbers to be processed.
+                    for (int i2 = 0; i2 < Math.min(6, osn.length); i2++) {
+                        lastosn[i2] = osn[i2];
+                        lastsn[i2] = sn[i2];
+                    }
+                    //s = s + Integer.valueOf(sn[0]).toString() + " is sn[0] now.";
+                    //s = s + Integer.valueOf(sn[1]).toString() + " is sn[1] now.\n";   
+                    
+                    if (n0 == 1 ) {
+                        for (int i2=0; i2<Math.min(6, split.length); i2++) {
+                            osn[i2] = Integer.parseInt(split[i2]);
+                        }
+                        s = s+ "osn were assigned to zero for indices : ";
+                        for (int i2=split.length; i2<6; i2++) {
+                            osn[i2] = 0;
+                            s = s + Integer.valueOf(i2).toString() + ",";
+                        }
+                        s = s + ";::";
+                    } else if (n0 > 1 ) {
+                        for (int i2=0; i2<Math.min(6, osn.length); i2++) {
+                            osn[i2] = nextosn[i2];
+                        }
+                    }
+                    if (i < es.size() - 1) {
+                        nextsplit = es.get(i+1).html().split("\\.");
+                        for (int i2=0; i2<Math.min(osn.length, nextsplit.length); i2++) {
+                            nextosn[i2] = Integer.parseInt(nextsplit[i2]);
+                        }
+                        for (int i2=nextsplit.length; i2<6; i2++) {
+                            nextosn[i2] = 0;
+                        }
+                    }
+                    
+                    for (int i2 = 0; i2<Math.min(6, osn.length); i2++) {
+                        sn[i2] = lastsn[i2];
+                    }
+                    if (cl(lastosn) > cl(osn)) {
+                        int up = 0;
+                        up = cl(lastsn) - cl(lastosn) + cl(osn) - 1;
+                        sn[up] = sn[up] + 1;
+                        for (int i6 = up + 1; i6 < Math.min(6, osn.length); i6++) {
+                            sn[i6] = 0; 
+                        }
+                    } else if (cl(lastosn) == cl(osn)) {
+                        Elements e1sl = es.get(i - 1).siblingElements();
+                        for (int i6 = 0; i6 < e1s.size(); i6++) {
+                            if (e1sl.get(i6).attr("class").equals("toctext")) {
+                                if (e1sl.get(i6).html().length() > 8) {
+                                       if (e1sl.get(i6).html().substring(0, 9).equalsIgnoreCase("Etymology")
+                                        || e1sl.get(i6).html().substring(0, 9).equalsIgnoreCase("Pronuncia")) 
+                                       {movetree = true;
+                                            break;
+                                       }
+                                }
+                            }
+                        }
+                        if (movetree) {
+                            sn[cl(sn)] = 1;
+                            for (int i2 = cl(sn) + 1; i2 < sn.length; i2 ++) {
+                                sn[i2] = 0;
+                            }
+                        } else {
+                            System.out.print("Array index (should minus 1):");
+                            System.out.println(cl(sn));
+                            sn[cl(sn)-1] = sn[cl(sn)-1] + 1;
+                        }
+                    } else if (cl(lastosn) < cl(osn)) {
+                        sn[cl(sn)] = 1;
+                    }
+                    s = s + word + ":: tocnumber is " + e.html() + ". Title is " + toc[i] + "\n";
+                    s = s + "osn :";
+                    for (int i1 = 0; i1< 6; i1++) {
+                        s = s + Integer.valueOf(osn[i1]).toString() + ",";
+                    }
+                    s = s + "\nsn  :";
+                    for (int i1 = 0; i1< 6; i1 ++) {
+                        s = s + Integer.valueOf(sn[i1]).toString() + ",";
+                    }
+                    System.out.print(s);
+                } else  { //r is null now
+                    for (int i1 = 0; i1 < e1s.size(); i1++) {
+                        if (r == null && e1s.get(i1).attr("class").equals("toctext")
+                                && e1s.get(i1).html().equalsIgnoreCase("English")) {
+                            r = e.html();
+                            for (int i2 = 0; i2 < Math.min(6, split.length); i2++) {
+                                osn[i2] = Integer.parseInt(split[i2]);
+                            }
+                            sn[0] = sn[0] + 1;
+                            break;
                         }
                     }
                 }
-            }
-        }
+                tocidfull = e.parent().attr("href");
+                if (tocid.contains("_")) {
+                    tocid = tocidfull.substring(1, tocidfull.indexOf("_"));
+                } else {
+                    tocid = tocidfull.substring(1);
+                }
+                if (tocid.equalsIgnoreCase("Etymology")) {
+                        getEtym(tocidfull, sn);
+                } else if (tocid.equalsIgnoreCase("Pronunciation")) {
+                        getPron(tocidfull, sn);
+                } else if (tocid.equalsIgnoreCase("Verb")
+                        || tocid.equalsIgnoreCase("Noun")
+                        || tocid.equalsIgnoreCase("Pronoun")
+                        || tocid.equalsIgnoreCase("Determiner")
+                        || tocid.equalsIgnoreCase("Conjunction")
+                        || tocid.equalsIgnoreCase("Adjective")
+                        || tocid.equalsIgnoreCase("Adverb")
+                        || tocid.equalsIgnoreCase("Article")
+                        || tocid.equalsIgnoreCase("Interjection")
+                        || tocid.equalsIgnoreCase("Numeral") 
+                        || tocid.equalsIgnoreCase("Particle")
+                        || tocid.equalsIgnoreCase("Preposition")) {
+                    getMeaning(tocidfull, sn);
+                }
+            } //End of outmost for
+        } // End of label loops
     }
 
     private void openJsoupDoc() {
@@ -186,6 +300,28 @@ public class HGetter {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    private static int cl(int[] ia) throws Exception { //count how to layersfor specialized array here only
+        int j = 0;
+        for (int i=0; i<ia.length; i++) {
+            if (ia[i] != 0) {
+                j = j + 1;
+            }
+        }
+        return j;
+    }
+
+    private void getEtym(String tocid, int[] sn) {
+        //throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    private void getPron(String tocid, int[] sn) {
+        //throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    private void getMeaning(String tocid, int[] sn) {
+        //throw new UnsupportedOperationException("Not yet implemented");
     }
 
     private static class LocalUserAgentContext

@@ -31,7 +31,7 @@ import org.jsoup.select.Elements;
 public class test {
 
     public static void main(String args[]) throws Exception {
-        test3();
+        test4();
     }
 
     public static void test() {
@@ -203,5 +203,20 @@ public class test {
         } catch (SQLException sqle) {
             
         }
+    }
+
+    private static void test4() {
+        //throw new UnsupportedOperationException("Not yet implemented");
+        String a = "abc.def";
+        String[] split = {"", "", "", ""};
+        split = a.split("\\.");
+        System.out.println("\u002E");
+        System.out.println(split.length);
+        for (int i =0; i< split.length; i++) {
+            System.out.print(split[i]);
+            System.out.print("\t");
+            System.out.println(i);
+        }
+//        System.out.println(split = a.split("."));
     }
 }
