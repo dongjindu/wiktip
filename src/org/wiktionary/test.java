@@ -9,6 +9,9 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +22,7 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 //import org.w3c.dom.Node;
 import org.jsoup.parser.Parser;
@@ -31,7 +35,8 @@ import org.jsoup.select.Elements;
 public class test {
 
     public static void main(String args[]) throws Exception {
-        test4();
+        testpronun();
+    
     }
 
     public static void test() {
@@ -184,11 +189,13 @@ public class test {
         try {
             DAO dao = new DAO();
             ResultSet rs;
-            dao.query("select word, sn1 from voc3 where sn1 > 0");
+            dao.query("select ref, type, abr from types");
             rs = dao.executeQuery();
             while (rs.next()) {
                 System.out.print(rs.getString(1) + "\t");
                 System.out.print(rs.getInt(2));
+                System.out.print("\t");
+                System.out.print(rs.getString(3));
                 System.out.println();
             }
             String[] str = new String[5];
@@ -209,6 +216,9 @@ public class test {
         //throw new UnsupportedOperationException("Not yet implemented");
         String a = "abc.def";
         String[] split = {"", "", "", ""};
+        ArrayList al;
+        Collection c;
+        Collections c1;
         split = a.split("\\.");
         System.out.println("\u002E");
         System.out.println(split.length);
@@ -218,5 +228,138 @@ public class test {
             System.out.println(i);
         }
 //        System.out.println(split = a.split("."));
+    }
+
+    private static void test5() {
+        try {
+                DAO dao = new DAO();
+                dao.update("drop table types if exists");
+                dao.executeUpdate();
+                dao.update("create memory table types(ref varchar(50), type int, abr varchar(10))");
+                dao.executeUpdate();
+                dao.update("create unique index types1 on types (ref)");
+                dao.executeUpdate();
+                dao.update("create unique index types2 on types (type, abr)");
+                dao.executeUpdate();
+                dao.update("create unique index types3  on types (abr)");
+                dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Etymology"); dao.setInt(2, 1); dao.setString(3, "O"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Pronunciation"); dao.setInt(2, 2); dao.setString(3, ""); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Noun"); dao.setInt(2, 101); dao.setString(3, "n"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Verb"); dao.setInt(2, 102); dao.setString(3, "v"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Pronoun"); dao.setInt(2, 103); dao.setString(3, "pr"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Adjective"); dao.setInt(2, 104); dao.setString(3, "Adj"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Adverb"); dao.setInt(2, 105); dao.setString(3, "Adv"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Preposition"); dao.setInt(2, 106); dao.setString(3, "prep"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Particle"); dao.setInt(2, 107); dao.setString(3, "part"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Interjection"); dao.setInt(2, 108); dao.setString(3, "interj"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Conjuction"); dao.setInt(2, 109); dao.setString(3, "conj"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Determinal"); dao.setInt(2, 110); dao.setString(3, "det"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Numeral"); dao.setInt(2, 111); dao.setString(3, "num"); dao.executeUpdate();
+                dao.update("create cached table dict(word varchar(50), txt varchar(3000), primary key(word))");
+                dao.executeUpdate();
+           //throw new UnsupportedOperationException("Not yet implemented");
+                dao.update("update types set ref = UPPER(ref)");
+                dao.executeUpdate();
+                dao.update("checkpoint");
+                dao.executeUpdate();
+                
+        } catch (Exception e) {
+            
+        }
+        
+    }
+
+    private static void testetym() {
+        //throw new UnsupportedOperationException("Not yet implemented");
+        File input;
+        try {
+            input = new File((new File(".").getCanonicalPath()) + "\\html\\fly.html");
+            org.jsoup.nodes.Document doc = Jsoup.parse(input, "UTF-8", "");
+            //Elements es = doc.select("span.tocnumber");
+            org.jsoup.nodes.Element e = doc.getElementById("Etymology_1").parent();
+            
+            Elements es = new Elements(); // =e.siblingElements();
+            org.jsoup.nodes.Element en = e;
+            int k = 0;
+            label2: {
+            do {
+                en = en.nextElementSibling();
+                Elements enk = en.children();
+                for (int i=0; i<enk.size(); i++) {
+                    if (enk.get(i).attr("class").equals("etyl")) {
+                        String s2 = enk.get(i).html() + "::" + enk.get(i).nextElementSibling().html();
+                        System.out.println("s2:" + s2);
+                        break label2;
+                    }
+                }
+                if (en != null) {es.add(en); 
+                System.out.print(Jsoup.parse(en.html()).text());}
+                
+                k = k + 1;
+                System.out.print(k);
+                System.out.print(",");
+                //if (k>200) break;
+            } while (en!=null);
+            }
+            System.out.print("\n");
+            label1: {
+/*            for (int i=0; i<es.size(); i++) {
+                //System.out.print(": " + es.get(i).html());
+                System.out.print(" , Sibling element  tagname: " + es.get(i).tagName());
+//                System.out.println("id of parent: " + es.get(i).parent().attr("href"));
+                System.out.println(" , Attribute to get classname: " + es.get(i).attr("class"));
+                Elements eskids = es.get(i).children();
+                for (int j=0; j < eskids.size(); j++) {
+                    if (eskids.get(j).attr("class").equals("etyl")) 
+                    { 
+                        System.out.println("Only class etyl!!!" + Jsoup.parse(eskids.get(j).html()).text());
+                        System.out.print("Next sibling of etyl class element :" + Jsoup.parse(eskids.get(j).nextElementSibling().outerHtml()).text());
+                        break label1;
+                    }
+                }
+            }*/}
+        } catch (IOException ex) {
+            Logger.getLogger(test.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    private static void testpronun() {
+        try {
+            File input = new File((new File(".").getCanonicalPath()) + "\\html\\neither.html");
+            org.jsoup.nodes.Document doc = Jsoup.parse(input, "UTF-8", "");
+            //Elements es = doc.select("span.tocnumber");
+            org.jsoup.nodes.Element e = doc.getElementById("Pronunciation").parent();
+            if (e == null) {
+                throw new Exception("find element by ID failed!");
+            }
+            System.out.println(e.tagName());
+            Elements es = e.nextElementSibling().children();
+            
+            //Elements es = e.parents();
+            
+            for (int i = 0; i < es.size(); i ++) {
+                String s2;
+                if (Jsoup.parse(es.get(i).outerHtml()).select("a").select(".extiw").get(0).attr("title").equals("w:British English")) {
+                    System.out.println("British English");
+                }
+                System.out.println(Jsoup.parse(es.get(i).outerHtml()).select("a"));
+                System.out.println(es.get(i).tagName());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

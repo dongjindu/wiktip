@@ -2,9 +2,7 @@ package org.wiktionary;
 
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.KeyboardFocusManager;
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;

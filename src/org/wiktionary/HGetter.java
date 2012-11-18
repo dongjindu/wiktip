@@ -86,7 +86,7 @@ public class HGetter {
         dao.executeUpdate();
     }
 
-    void getImageAndCount() throws Exception {
+    void xImageAndCount() throws Exception {
         //throw new UnsupportedOperationException("Not yet implemented");
         if (jsoupdoc == null) {
             openJsoupDoc();
@@ -139,7 +139,7 @@ public class HGetter {
         }
         Elements es = jsoupdoc.select("span.tocnumber"); //tocnumber elements
         String r = null; //root tocnumber
-        String s = "", s1 = "";
+        String s = "getXed Started!", s1 = "here \n";
         String[] toc = new String[es.size()];
         int n0 = 0;
         int[] osn = {0, 0, 0, 0, 0, 0};
@@ -180,7 +180,7 @@ public class HGetter {
                         for (int i2=0; i2<Math.min(6, split.length); i2++) {
                             osn[i2] = Integer.parseInt(split[i2]);
                         }
-                        s = s+ "osn were assigned to zero for indices : ";
+                        s = s + "osn were assigned to zero for indices : ";
                         for (int i2=split.length; i2<6; i2++) {
                             osn[i2] = 0;
                             s = s + Integer.valueOf(i2).toString() + ",";
@@ -230,8 +230,6 @@ public class HGetter {
                                 sn[i2] = 0;
                             }
                         } else {
-                            System.out.print("Array index (should minus 1):");
-                            System.out.println(cl(sn));
                             sn[cl(sn)-1] = sn[cl(sn)-1] + 1;
                         }
                     } else if (cl(lastosn) < cl(osn)) {
@@ -247,7 +245,7 @@ public class HGetter {
                         s = s + Integer.valueOf(sn[i1]).toString() + ",";
                     }
                     System.out.print(s);
-                } else  { //r is null now
+                } else  { //r is null so far
                     for (int i1 = 0; i1 < e1s.size(); i1++) {
                         if (r == null && e1s.get(i1).attr("class").equals("toctext")
                                 && e1s.get(i1).html().equalsIgnoreCase("English")) {
@@ -260,29 +258,23 @@ public class HGetter {
                         }
                     }
                 }
+                if (r == null) continue;
+                if (r != null && cl(sn) < 2) continue;
                 tocidfull = e.parent().attr("href");
-                if (tocid.contains("_")) {
+                System.out.println(tocidfull + " is href value.");
+                if (tocidfull.contains("_")) {
                     tocid = tocidfull.substring(1, tocidfull.indexOf("_"));
                 } else {
                     tocid = tocidfull.substring(1);
                 }
-                if (tocid.equalsIgnoreCase("Etymology")) {
-                        getEtym(tocidfull, sn);
-                } else if (tocid.equalsIgnoreCase("Pronunciation")) {
-                        getPron(tocidfull, sn);
-                } else if (tocid.equalsIgnoreCase("Verb")
-                        || tocid.equalsIgnoreCase("Noun")
-                        || tocid.equalsIgnoreCase("Pronoun")
-                        || tocid.equalsIgnoreCase("Determiner")
-                        || tocid.equalsIgnoreCase("Conjunction")
-                        || tocid.equalsIgnoreCase("Adjective")
-                        || tocid.equalsIgnoreCase("Adverb")
-                        || tocid.equalsIgnoreCase("Article")
-                        || tocid.equalsIgnoreCase("Interjection")
-                        || tocid.equalsIgnoreCase("Numeral") 
-                        || tocid.equalsIgnoreCase("Particle")
-                        || tocid.equalsIgnoreCase("Preposition")) {
-                    getMeaning(tocidfull, sn);
+                if (Ref.hasRef(tocid) && Ref.isEtym(tocid)) {
+                        xEtym(tocidfull, sn);
+                } else if (Ref.hasRef(tocid) && Ref.isPronun(tocid)) {
+                        xPron(tocidfull, sn);
+                } else if (Ref.hasRef(tocid)) {
+                        xMeaning(tocidfull, sn);
+                } else if (!Ref.hasRef(tocid)) {
+                        newRef(tocid); //Later have to check Referrence manually to decide if I want to extract it anyway.
                 }
             } //End of outmost for
         } // End of label loops
@@ -312,16 +304,34 @@ public class HGetter {
         return j;
     }
 
-    private void getEtym(String tocid, int[] sn) {
+    private void xEtym(String t, int[] sn) throws Exception{
         //throw new UnsupportedOperationException("Not yet implemented");
+        if (jsoupdoc == null) {
+            openJsoupDoc();
+            if (jsoupdoc == null) throw new Exception("Cannot find html source. Inconsistant status in DB...");
+        }
+        
     }
 
-    private void getPron(String tocid, int[] sn) {
+    private void xPron(String t, int[] sn) throws Exception{
         //throw new UnsupportedOperationException("Not yet implemented");
+        if (jsoupdoc == null) {
+            openJsoupDoc();
+            if (jsoupdoc == null) throw new Exception("Cannot find html source. Inconsistant status in DB...");
+        }
     }
 
-    private void getMeaning(String tocid, int[] sn) {
+    private void xMeaning(String t, int[] sn) throws Exception{
         //throw new UnsupportedOperationException("Not yet implemented");
+        if (jsoupdoc == null) {
+            openJsoupDoc();
+            if (jsoupdoc == null) throw new Exception("Cannot find html source. Inconsistant status in DB...");
+        }
+    }
+
+    private void newRef(String tocid) {
+        //throw new UnsupportedOperationException("Not yet implemented");
+        
     }
 
     private static class LocalUserAgentContext

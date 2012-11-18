@@ -137,7 +137,7 @@ public class DicActionListener implements ActionListener {
                     synchronized (pslock) {
                         dao.query("select count(word) from voc"
                                 + " where word like ? and (htmled = ? or imaged = ? or xed = ?)");
-                        String likewords = "fly%";
+                        String likewords = "nei%";
                         dao.setString(1, likewords);
                         dao.setBoolean(2, false);
                         dao.setBoolean(3, false);
@@ -209,7 +209,7 @@ public class DicActionListener implements ActionListener {
                               hgetter.getHtml();
                           }
                           if (!mrs[key].getBoolean("imaged")) {
-                              hgetter.getImageAndCount();
+                              hgetter.xImageAndCount();
                           }
                           if (!mrs[key].getBoolean("xed")) {
                               hgetter.getXed();
@@ -316,30 +316,47 @@ public class DicActionListener implements ActionListener {
                         + "meaning varchar(200),"
                         + "primary key(word, sn1, sn2, sn3, sn4))");
                 dao.executeUpdate();
-                dao.update("create cached table etym( word varchar(50),"
-                        + "sn int,"
-                        + "etym varchar(50),"
-                        + "primary key(word, sn))");
+                dao.update("drop table types if exists");
                 dao.executeUpdate();
-                dao.update("create cached table image(word varchar(50),"
-                        + "sn int,"
-                        + "imageurl varchar(50)");
+                dao.update("create memory table types(ref varchar(50), type int, abr varchar(10))");
                 dao.executeUpdate();
-                dao.update("create cached table pron( word varchar(50),"
-                        + "sn int,"
-                        + "etymsn int,"
-                        + "pron varchar(50),"
-                        + "primary key(word, sn))");
+                dao.update("create unique index types1 on types (ref)");
                 dao.executeUpdate();
-                dao.update("create cached table meaning(word varchar(50),"
-                        + "sn int,"
-                        + "etymsn int,"
-                        + "etymsnsub varchar(10),"
-                        + "meaning varchar(300),"
-                        + "primary key (word, sn))");
+                dao.update("create unique index types2 on types (type, abr)");
+                dao.executeUpdate();
+                dao.update("create unique index types3  on types (abr)");
+                dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Etymology"); dao.setInt(2, 1); dao.setString(3, "O"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Pronunciation"); dao.setInt(2, 2); dao.setString(3, ""); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Noun"); dao.setInt(2, 101); dao.setString(3, "n"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Verb"); dao.setInt(2, 102); dao.setString(3, "v"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Pronoun"); dao.setInt(2, 103); dao.setString(3, "pr"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Adjective"); dao.setInt(2, 104); dao.setString(3, "Adj"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Adverb"); dao.setInt(2, 105); dao.setString(3, "Adv"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Preposition"); dao.setInt(2, 106); dao.setString(3, "prep"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Particle"); dao.setInt(2, 107); dao.setString(3, "part"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Interjection"); dao.setInt(2, 108); dao.setString(3, "interj"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Conjuction"); dao.setInt(2, 109); dao.setString(3, "conj"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Determinal"); dao.setInt(2, 110); dao.setString(3, "det"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Numeral"); dao.setInt(2, 111); dao.setString(3, "num"); dao.executeUpdate();
+                
+                dao.update("craete cached table dict(word varchar(50), txt varchar(3000), primary key(word))");
+                dao.executeUpdate();
                 dao.update("checkpoint");
                 dao.executeUpdate();
-                //dao.query("");
             }
         } catch (DAOException daoe) {
             daoe.printStackTrace();
