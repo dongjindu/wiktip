@@ -26,8 +26,8 @@ public class Ref {
             dao.query("select ref, type, abr from types");
             rs = dao.executeQuery();
             while (rs.next()) {
-                typebyref.put(rs.getString(1), Integer.valueOf(rs.getInt(2)));
-                refbytype.put(Integer.valueOf(rs.getInt(2)), rs.getString(1));
+                typebyref.put(rs.getString(1).toUpperCase(), Integer.valueOf(rs.getInt(2)));
+                refbytype.put(Integer.valueOf(rs.getInt(2)), rs.getString(1).toUpperCase());
                 abrbytype.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
             }
         } catch (DAOException ex) {
@@ -71,7 +71,7 @@ public class Ref {
         }
     }
     public static boolean isNonChildType (int type) {
-        if (type < 100) {
+        if (type < 10) {
             return true;
         } else {
             return false;
@@ -86,6 +86,20 @@ public class Ref {
     }
     public static boolean isPronun(String ref) {
         if (typebyref.get(ref.toUpperCase()) == 2) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    public static boolean isSynonym(String ref) {
+        if (typebyref.get(ref.toUpperCase()) == 11 || typebyref.get(ref.toUpperCase()) == 12) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    public static boolean isAntonym(String ref) {
+        if (typebyref.get(ref.toUpperCase()) == 13 || typebyref.get(ref.toUpperCase()) == 14) {
             return true;
         } else {
             return false;

@@ -35,7 +35,7 @@ import org.jsoup.select.Elements;
 public class test {
 
     public static void main(String args[]) throws Exception {
-        testpronun();
+        test();
     
     }
 
@@ -47,7 +47,7 @@ public class test {
              * String p = "z%"; dao.update("update voc set htmled = false where
              * word not like ?"); dao.setString(1, p); dao.executeUpdate();
              */
-/*            dao.update("drop table voc3 if exists");
+            dao.update("drop table voc3 if exists");
             dao.executeUpdate();
             dao.update("create cached table voc3(word varchar(50),"
                     + "sn1 int,"
@@ -60,7 +60,8 @@ public class test {
                     + "sn4c varchar(10),"
                     + "type int,"
                     + "etym varchar(50),"
-                    + "pron varchar(50),"
+                    + "pronus varchar(50),"
+                    + "pronuk varchar(50),"
                     + "image varchar(50),"
                     + "imageurl varchar(200),"
                     + "antonyms varchar(100),"
@@ -69,8 +70,8 @@ public class test {
                     + "primary key(word, sn1, sn2, sn3, sn4))");
             dao.executeUpdate();
             dao.update("update voc set imaged = false");
-            dao.executeUpdate();*/
-            dao.query("select * from voc where imaged = true");
+            dao.executeUpdate();
+/*           dao.query("select * from voc where imaged = true");
             rs = dao.executeQuery();
             while (rs.next()) {
                 System.out.print(rs.getString(1) + "\t");
@@ -80,7 +81,7 @@ public class test {
                 System.out.println();
                 //System.out.println(rs.getInt("sn1"));
             }
-
+*/
             /*
              * dao.update("create cached table image(word varchar(50)," + "sn
              * int," + "imageurl varchar(200), primary key(word, sn))");
@@ -94,8 +95,8 @@ public class test {
         } catch (DAOException daoe) {
             daoe.printStackTrace();
             System.err.print("!DAO Exception!");
-        } catch (SQLException sqle) {
-            sqle.printStackTrace();
+//        } catch (SQLException sqle) {
+//            sqle.printStackTrace();
             System.err.print("!SQL Exception!");
         }
     }
@@ -241,12 +242,22 @@ public class test {
                 dao.executeUpdate();
                 dao.update("create unique index types2 on types (type, abr)");
                 dao.executeUpdate();
-                dao.update("create unique index types3  on types (abr)");
+                dao.update("create index types3  on types (abr)");
                 dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Etymology"); dao.setInt(2, 1); dao.setString(3, "O"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Pronunciation"); dao.setInt(2, 2); dao.setString(3, ""); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Synonym"); dao.setInt(2, 11); dao.setString(3, "Syn"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Synonyms"); dao.setInt(2, 12); dao.setString(3, "Syn"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Antonym"); dao.setInt(2, 13); dao.setString(3, "Ant"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Antonyms"); dao.setInt(2, 14); dao.setString(3, "Ant"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "image"); dao.setInt(2, 15); dao.setString(3, "Pic"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Noun"); dao.setInt(2, 101); dao.setString(3, "n"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
@@ -269,6 +280,8 @@ public class test {
                 dao.setString(1, "Determinal"); dao.setInt(2, 110); dao.setString(3, "det"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Numeral"); dao.setInt(2, 111); dao.setString(3, "num"); dao.executeUpdate();
+                dao.update("drop table dict if exists");
+                dao.executeUpdate();
                 dao.update("create cached table dict(word varchar(50), txt varchar(3000), primary key(word))");
                 dao.executeUpdate();
            //throw new UnsupportedOperationException("Not yet implemented");
@@ -347,7 +360,6 @@ public class test {
             }
             System.out.println(e.tagName());
             Elements es = e.nextElementSibling().children();
-            
             //Elements es = e.parents();
             
             for (int i = 0; i < es.size(); i ++) {

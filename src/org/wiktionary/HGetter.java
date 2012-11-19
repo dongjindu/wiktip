@@ -43,47 +43,54 @@ public class HGetter {
     private org.w3c.dom.Document doc;
     private String htmlpath;
     private org.jsoup.nodes.Document jsoupdoc;
+    public boolean filefound = true;
     
     public HGetter(String pword, HashMap<String, Object> phm) {
         if (hm == null) { hm = phm; }
         word = pword;
         htmlpath = ((JTextField) hm.get("htmldir")).getText();
     }
-    public void getHtml() throws Exception {
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        Result output = new StreamResult(new File(htmlpath + "\\" + word + ".html"));
-        //Logger.getLogger("org.lobobrowser").setLevel(Level.OFF);
-        // Open a connection on the URL we want to render first.
-        //String uri = "http://lobobrowser.org/browser/home.jsp";
-        //String uri = "http://en.wiktionary.org/wiki/built-in";
-        String uri = "http://en.wiktionary.org/wiki/" + word;
-        URL url = new URL(uri);
-        URLConnection connection = url.openConnection();
-        InputStream in = connection.getInputStream();
+    public void getHtml() {
+        try {
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            Result output = new StreamResult(new File(htmlpath + "\\" + word + ".html"));
+            //Logger.getLogger("org.lobobrowser").setLevel(Level.OFF);
+            // Open a connection on the URL we want to render first.
+            //String uri = "http://lobobrowser.org/browser/home.jsp";
+            //String uri = "http://en.wiktionary.org/wiki/built-in";
+            String uri = "http://en.wiktionary.org/wiki/" + word;
+            URL url = new URL(uri);
+            URLConnection connection = url.openConnection();
+            InputStream in = connection.getInputStream();
 
-        Reader reader = new InputStreamReader(in);
+            Reader reader = new InputStreamReader(in);
 
-        InputSource is = new InputSourceImpl(reader, uri);
-        is.setEncoding("UTF-8");
-        HtmlPanel htmlPanel = new HtmlPanel();
-        UserAgentContext ucontext = new LocalUserAgentContext();
-        HtmlRendererContext rendererContext =
-                new LocalHtmlRendererContext(htmlPanel, ucontext);
+            InputSource is = new InputSourceImpl(reader, uri);
+            is.setEncoding("UTF-8");
+            HtmlPanel htmlPanel = new HtmlPanel();
+            UserAgentContext ucontext = new LocalUserAgentContext();
+            HtmlRendererContext rendererContext =
+                    new LocalHtmlRendererContext(htmlPanel, ucontext);
 
 
-        DocumentBuilderImpl builder =
-                new DocumentBuilderImpl(
-                rendererContext.getUserAgentContext(),
-                rendererContext);
-        doc = builder.parse(is);
-        Source input = new DOMSource(doc);
-        transformer.transform(input, output);
-        in.close();
-        DAO dao = new DAO();
-        dao.update("update voc set htmled = ? where word = ?");
-        dao.setBoolean(1, true);
-        dao.setString(2, word);
-        dao.executeUpdate();
+            DocumentBuilderImpl builder =
+                    new DocumentBuilderImpl(
+                    rendererContext.getUserAgentContext(),
+                    rendererContext);
+            doc = builder.parse(is);
+            Source input = new DOMSource(doc);
+            transformer.transform(input, output);
+            in.close();
+            DAO dao = new DAO();
+            dao.update("update voc set htmled = ? where word = ?");
+            dao.setBoolean(1, true);
+            dao.setString(2, word);
+            dao.executeUpdate();
+        } catch (java.io.FileNotFoundException ioe) {
+            filefound = false;
+        } catch (Exception ex) {
+            //other exceptions not supported yet!
+        }
     }
 
     void xImageAndCount() throws Exception {
@@ -116,7 +123,7 @@ public class HGetter {
                 dao.setInt(3, 0);
                 dao.setInt(4, 0);
                 dao.setInt(5, 0);
-                dao.setInt(6, 3);
+                dao.setInt(6, Ref.getType("image"));
                 dao.setString(7, uri);
                 dao.setString(8, ifn);
                 dao.executeUpdate();
@@ -245,6 +252,26 @@ public class HGetter {
                         s = s + Integer.valueOf(sn[i1]).toString() + ",";
                     }
                     System.out.print(s);
+                    
+                    tocidfull = e.parent().attr("href").substring(1);
+                    if (tocidfull.contains("_")) {
+                        tocid = tocidfull.substring(0, tocidfull.indexOf("_"));
+                    } else {
+                        tocid = tocidfull.substring(0);
+                    }
+                    if (Ref.hasRef(tocid) && Ref.isEtym(tocid)) {
+                        xEtym(tocidfull, sn);
+                    } else if (Ref.hasRef(tocid) && Ref.isPronun(tocid)) {
+                        xPron(tocidfull, sn);
+                    } else if (Ref.hasRef(tocid) && Ref.isSynonym(tocid)) {
+                        xSyn(tocidfull, sn);
+                    } else if (Ref.hasRef(tocid) && Ref.isAntonym(tocid)) {
+                        xAnt(tocidfull, sn);
+                    } else if (Ref.hasRef(tocid) && Ref.getType(tocid) > 100) {
+                        xMeaning(tocidfull, sn);
+                    } else if (!Ref.hasRef(tocid)) {
+                        newRef(tocid); //Later have to check Referrence manually to decide if I want to extract it anyway.
+                    }
                 } else  { //r is null so far
                     for (int i1 = 0; i1 < e1s.size(); i1++) {
                         if (r == null && e1s.get(i1).attr("class").equals("toctext")
@@ -257,24 +284,6 @@ public class HGetter {
                             break;
                         }
                     }
-                }
-                if (r == null) continue;
-                if (r != null && cl(sn) < 2) continue;
-                tocidfull = e.parent().attr("href");
-                System.out.println(tocidfull + " is href value.");
-                if (tocidfull.contains("_")) {
-                    tocid = tocidfull.substring(1, tocidfull.indexOf("_"));
-                } else {
-                    tocid = tocidfull.substring(1);
-                }
-                if (Ref.hasRef(tocid) && Ref.isEtym(tocid)) {
-                        xEtym(tocidfull, sn);
-                } else if (Ref.hasRef(tocid) && Ref.isPronun(tocid)) {
-                        xPron(tocidfull, sn);
-                } else if (Ref.hasRef(tocid)) {
-                        xMeaning(tocidfull, sn);
-                } else if (!Ref.hasRef(tocid)) {
-                        newRef(tocid); //Later have to check Referrence manually to decide if I want to extract it anyway.
                 }
             } //End of outmost for
         } // End of label loops
@@ -310,7 +319,45 @@ public class HGetter {
             openJsoupDoc();
             if (jsoupdoc == null) throw new Exception("Cannot find html source. Inconsistant status in DB...");
         }
-        
+        org.jsoup.nodes.Element e = jsoupdoc.getElementById(t);
+        org.jsoup.nodes.Element e0 = e.parent();
+        int k = 0;
+        String etym;
+        l1:{
+            while(e0 != null) {
+                k = k + 1;
+                e0 = e0.nextElementSibling();
+                if (e0 == null) break l1;
+                if (Jsoup.parse(e0.html(),"UTF-8") == null) {
+                    System.out.println("parse failed" + e0.html());
+                }
+                Elements es0 = Jsoup.parse(e0.html(), "UTF-8").select(".etyl"); //e0.select("etyl") does not work
+                
+                org.jsoup.nodes.Element e1;
+                if (es0.size() > 0) {
+                    e1 = es0.get(0); 
+                    etym = e1.html() + " " + Jsoup.parse(e1.nextElementSibling().html(), "UTF-8").text();
+                    synchronized (DAO.daolock) {
+                        try {
+                            DAO dao = new DAO();
+                            dao.update("insert into voc3 (word, sn1, sn2, sn3, sn4, type, etym) values"
+                                    + "(?, ?, ?, ?, ?, ?, ?)");
+                            dao.setString(1, word);
+                            dao.setInt(2, sn[1]);
+                            dao.setInt(3, sn[2]);
+                            dao.setInt(4, sn[3]);
+                            dao.setInt(5, sn[4]);
+                            dao.setInt(6, Ref.getType("Etymology"));
+                            dao.setString(7, etym);
+                            dao.executeUpdate();
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                    break l1;
+                }
+            }
+        }
     }
 
     private void xPron(String t, int[] sn) throws Exception{
@@ -332,6 +379,14 @@ public class HGetter {
     private void newRef(String tocid) {
         //throw new UnsupportedOperationException("Not yet implemented");
         
+    }
+
+    private void xSyn(String tocidfull, int[] sn) {
+        //throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    private void xAnt(String tocidfull, int[] sn) {
+        //throw new UnsupportedOperationException("Not yet implemented");
     }
 
     private static class LocalUserAgentContext

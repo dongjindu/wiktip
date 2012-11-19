@@ -137,7 +137,7 @@ public class DicActionListener implements ActionListener {
                     synchronized (pslock) {
                         dao.query("select count(word) from voc"
                                 + " where word like ? and (htmled = ? or imaged = ? or xed = ?)");
-                        String likewords = "nei%";
+                        String likewords = "ne%";
                         dao.setString(1, likewords);
                         dao.setBoolean(2, false);
                         dao.setBoolean(3, false);
@@ -208,13 +208,14 @@ public class DicActionListener implements ActionListener {
                           if (!mrs[key].getBoolean("htmled")) {
                               hgetter.getHtml();
                           }
-                          if (!mrs[key].getBoolean("imaged")) {
-                              hgetter.xImageAndCount();
+                          if (hgetter.filefound) { 
+                              if (!mrs[key].getBoolean("imaged")) {
+                                  hgetter.xImageAndCount();
+                              }
+                              if (!mrs[key].getBoolean("xed")) {
+                                  hgetter.getXed();
+                              }
                           }
-                          if (!mrs[key].getBoolean("xed")) {
-                              hgetter.getXed();
-                          }
-                              
                     } catch (Exception e) {
                        System.out.println("-----------++++++++++");
                        e.printStackTrace();
@@ -308,7 +309,8 @@ public class DicActionListener implements ActionListener {
                         + "sn4c varchar(10),"
                         + "type int,"
                         + "etym varchar(50),"
-                        + "pron varchar(50),"
+                        + "pronus varchar(50),"
+                        + "pronuk varchar(50),"
                         + "image varchar(50),"
                         + "imageurl varchar(200),"
                         + "antonyms varchar(100),"
@@ -324,12 +326,20 @@ public class DicActionListener implements ActionListener {
                 dao.executeUpdate();
                 dao.update("create unique index types2 on types (type, abr)");
                 dao.executeUpdate();
-                dao.update("create unique index types3  on types (abr)");
+                dao.update("create index types3  on types (abr)");
                 dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Etymology"); dao.setInt(2, 1); dao.setString(3, "O"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Pronunciation"); dao.setInt(2, 2); dao.setString(3, ""); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Synonym"); dao.setInt(2, 11); dao.setString(3, "Syn"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Synonyms"); dao.setInt(2, 12); dao.setString(3, "Syn"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Antonym"); dao.setInt(2, 13); dao.setString(3, "Ant"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Antonyms"); dao.setInt(2, 14); dao.setString(3, "Ant"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Noun"); dao.setInt(2, 101); dao.setString(3, "n"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
@@ -352,8 +362,9 @@ public class DicActionListener implements ActionListener {
                 dao.setString(1, "Determinal"); dao.setInt(2, 110); dao.setString(3, "det"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Numeral"); dao.setInt(2, 111); dao.setString(3, "num"); dao.executeUpdate();
-                
-                dao.update("craete cached table dict(word varchar(50), txt varchar(3000), primary key(word))");
+                dao.update("drop table dict if exists");
+                dao.executeUpdate();
+                dao.update("create cached table dict(word varchar(50), txt varchar(3000), primary key(word))");
                 dao.executeUpdate();
                 dao.update("checkpoint");
                 dao.executeUpdate();
