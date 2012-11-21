@@ -41,14 +41,14 @@ public class HGetter {
     private String word;
     private static HashMap<String, Object> hm;
     private org.w3c.dom.Document doc;
-    private String htmlpath;
+    private static String htmlpath;
     private org.jsoup.nodes.Document jsoupdoc;
     public boolean filefound = true;
-    
+
     public HGetter(String pword, HashMap<String, Object> phm) {
         if (hm == null) { hm = phm; }
+        if (htmlpath == null) {htmlpath = ((JTextField) hm.get("htmldir")).getText();}
         word = pword;
-        htmlpath = ((JTextField) hm.get("htmldir")).getText();
     }
     public void getHtml() {
         try {
@@ -139,6 +139,8 @@ public class HGetter {
     }
 
     synchronized void getXed() throws Exception{
+        Integer a = 0;
+        synchronized (a) {
         //throw new UnsupportedOperationException("Not yet implemented");
         if (jsoupdoc == null) {
             openJsoupDoc();
@@ -146,71 +148,101 @@ public class HGetter {
         }
         Elements es = jsoupdoc.select("span.tocnumber"); //tocnumber elements
         String r = null; //root tocnumber
-        String s = "getXed Started!", s1 = "here \n";
+        String s = "\n" + word + " getXed Started!\n";
+        System.out.print(s);
         String[] toc = new String[es.size()];
-        int n0 = 0;
+        int n0 = 0, j = 0;
         int[] osn = {0, 0, 0, 0, 0, 0};
+        int[] osnunfiltered = {0, 0, 0, 0, 0, 0}; 
+        int[] lastosnunfiltered = {0, 0, 0, 0, 0, 0}; 
         int[] sn = {0, 0, 0, 0, 0, 0};
         int[] lastosn = {0, 0, 0, 0, 0, 0};
         int[] nextosn = {0, 0, 0, 0, 0, 0};
         int[] lastsn = {0, 0, 0, 0, 0, 0};
+        boolean bincut = false, bref = false; //Actually cut started until last cut.
+        int[] bcutsnroot = {0, 0, 0, 0, 0, 0};
+        boolean b1 = false;
         loops:
         {
             for (int i = 0; i < es.size(); i++) {
                 org.jsoup.nodes.Element e = es.get(i);
                 String[] split = e.html().split("\\.");
-                String[] nextsplit;
                 String tocid = "", tocidfull = "";
-                Elements e1s = e.siblingElements();
-                /*for (int i2 = 0; i2 < e1s.size(); i2++) {
-                    if (e1s.get(i2).attr("class").equals("toctext")) {
-                        toc[i] = e1s.get(i2).html();
-                        break;
-                    }
-                }*/
+                String s6 = e.parent().attr("href");
 
-                //tocnumbers[i] = es.get(i).
+                for (int i1=0; i1 < osn.length; i1++) {
+                    lastosnunfiltered[i1] = osnunfiltered[i1];
+                }
+
+                for (int i1 = 0; i1 < Math.min(6, split.length); i1++) {
+                    osnunfiltered[i1] = Integer.parseInt(split[i1]);
+                }
+                for (int i1 = split.length; i1 < 6; i1++) {
+                    osnunfiltered[i1] = 0;
+                }
+/*
+                String ps0 = "\nps0 Output OSNunfiltered now for ";
+                ps0 = ps0 + e.html() + "," + e.parent().attr("href") + " :";
+                for (int i1 = 0; i1 < 6; i1++) {
+                    ps0 = ps0 + osnunfiltered[i1] + " , ";
+                }
+                System.out.print(ps0);
+*/
+                bref = Ref.hasRef(s6.indexOf("_")>0 ? s6.substring(1, s6.indexOf("_")) : s6.substring(1)); //Only the type in ref will be a mapped sn[] 
+                if (!bref) {
+                    newRef(s6.indexOf("_")>0 ? s6.substring(1, s6.indexOf("_")) : s6.substring(1)); //So far the only post processing and not necessary for runtime.
+                }
+                if (!bref && !bincut) { //Starting of cut
+                    bincut = !bref;
+                    for (int i1 = 0; i1 < osn.length; i1++) {
+                        bcutsnroot[i1] = osnunfiltered[i1];
+                    }
+                    j = i;
+                    continue;
+                } 
+                if (bincut) { //Check if current toc is the children of the bcutsnroot
+                    boolean bsubnode = true; //Assumpt true
+                    for (int i1 =0; i1 < cl(bcutsnroot); i1++) {
+                        if ( bcutsnroot[i1] != osnunfiltered[i1]) {
+                            bsubnode = false;
+                            break;
+                        }
+                    }
+                    if (bsubnode) {
+                        continue; //cut
+                    } else if (!bsubnode) {
+                        if (!bref) {
+                            bincut = true;
+                            for (int i1 = 0; i1 < osn.length; i1 ++) {
+                                bcutsnroot[i1] = osnunfiltered[i1];
+                            }
+                            j = i;
+                            continue;
+                        }
+                    }
+                }
+                
                 if (r != null) {
                     if (e.html().length() == r.length()
                             && !(e.html().equals(r)) ) {break loops;}
                     n0 = n0 + 1;
                     Boolean movetree = false;
-                    s = "\n" +  e.html() + "::"; //This are the toc numbers to be processed.
-                    for (int i2 = 0; i2 < Math.min(6, osn.length); i2++) {
+                    for (int i2 = 0; i2 < osn.length; i2++) {
                         lastosn[i2] = osn[i2];
                         lastsn[i2] = sn[i2];
                     }
-                    //s = s + Integer.valueOf(sn[0]).toString() + " is sn[0] now.";
-                    //s = s + Integer.valueOf(sn[1]).toString() + " is sn[1] now.\n";   
                     
-                    if (n0 == 1 ) {
-                        for (int i2=0; i2<Math.min(6, split.length); i2++) {
-                            osn[i2] = Integer.parseInt(split[i2]);
-                        }
-                        s = s + "osn were assigned to zero for indices : ";
-                        for (int i2=split.length; i2<6; i2++) {
-                            osn[i2] = 0;
-                            s = s + Integer.valueOf(i2).toString() + ",";
-                        }
-                        s = s + ";::";
-                    } else if (n0 > 1 ) {
-                        for (int i2=0; i2<Math.min(6, osn.length); i2++) {
-                            osn[i2] = nextosn[i2];
-                        }
+                    for (int i2 = 0; i2 < osn.length; i2++) {
+                        osn[i2] = osnunfiltered[i2];
                     }
-                    if (i < es.size() - 1) {
-                        nextsplit = es.get(i+1).html().split("\\.");
-                        for (int i2=0; i2<Math.min(osn.length, nextsplit.length); i2++) {
-                            nextosn[i2] = Integer.parseInt(nextsplit[i2]);
-                        }
-                        for (int i2=nextsplit.length; i2<6; i2++) {
-                            nextosn[i2] = 0;
-                        }
-                    }
-                    
-                    for (int i2 = 0; i2<Math.min(6, osn.length); i2++) {
-                        sn[i2] = lastsn[i2];
-                    }
+/*
+                String ps1 = "\nps1 Output osn now : ";
+                for (int i1=0; i1<6; i1++) {
+                    ps1 = ps1 + osn[i1] + ";";
+                }
+                ps1 = ps1;
+                System.out.print(ps1);
+*/                    
                     if (cl(lastosn) > cl(osn)) {
                         int up = 0;
                         up = cl(lastsn) - cl(lastosn) + cl(osn) - 1;
@@ -219,18 +251,11 @@ public class HGetter {
                             sn[i6] = 0; 
                         }
                     } else if (cl(lastosn) == cl(osn)) {
-                        Elements e1sl = es.get(i - 1).siblingElements();
-                        for (int i6 = 0; i6 < e1s.size(); i6++) {
-                            if (e1sl.get(i6).attr("class").equals("toctext")) {
-                                if (e1sl.get(i6).html().length() > 8) {
-                                       if (e1sl.get(i6).html().substring(0, 9).equalsIgnoreCase("Etymology")
-                                        || e1sl.get(i6).html().substring(0, 9).equalsIgnoreCase("Pronuncia")) 
-                                       {movetree = true;
-                                            break;
-                                       }
-                                }
-                            }
-                        }
+                        String s7 = es.get(i-1).parent().attr("href"); //Consider how to use j(the cycle index of last cut root)
+                        String s8 = s7.indexOf("_") > 0 ? s7.substring(1, s7.indexOf("_")) : s7.substring(1);
+                        if (s8.equalsIgnoreCase("Etymology") || s8.equalsIgnoreCase("Pronunciation")) {
+                            movetree = true;
+                        };
                         if (movetree) {
                             sn[cl(sn)] = 1;
                             for (int i2 = cl(sn) + 1; i2 < sn.length; i2 ++) {
@@ -242,8 +267,9 @@ public class HGetter {
                     } else if (cl(lastosn) < cl(osn)) {
                         sn[cl(sn)] = 1;
                     }
-                    s = s + word + ":: tocnumber is " + e.html() + ". Title is " + toc[i] + "\n";
-                    s = s + "osn :";
+                    s = "\n" + word + ":: tocnumber is " + e.html() + ". Href is " + e.parent().attr("href") + "\n";
+                    System.out.print(s);
+                    s = "osn :";
                     for (int i1 = 0; i1< 6; i1++) {
                         s = s + Integer.valueOf(osn[i1]).toString() + ",";
                     }
@@ -252,41 +278,64 @@ public class HGetter {
                         s = s + Integer.valueOf(sn[i1]).toString() + ",";
                     }
                     System.out.print(s);
-                    
-                    tocidfull = e.parent().attr("href").substring(1);
-                    if (tocidfull.contains("_")) {
-                        tocid = tocidfull.substring(0, tocidfull.indexOf("_"));
-                    } else {
-                        tocid = tocidfull.substring(0);
+/*                    synchronized (DAO.daolock) {
+                        try {
+                            DAO dao = new DAO();
+                            dao.update("insert into voc3test(word, sn1, sn2, sn3, sn4, sn5) values"
+                                    + "(?, ?, ?, ?, ?, ?)");
+                            dao.setString(1, word);
+                            dao.setInt(2, sn[1]);
+                            dao.setInt(3, sn[2]);
+                            dao.setInt(4, sn[3]);
+                            dao.setInt(5, sn[4]);
+                            dao.setInt(6, sn[5]);
+                            dao.executeUpdate();
+                        } catch (Exception ex) {
+                            System.out.print("\nException caught for voc3test at " + word + ":");
+                            System.out.print(sn[0]); System.out.print(",");
+                            System.out.print(sn[1]); System.out.print(",");
+                            System.out.print(sn[2]); System.out.print(",");
+                            System.out.print(sn[3]); System.out.print(",");
+                            System.out.print(sn[4]); System.out.print(",");
+                            System.out.print(sn[5]); System.out.print("....");
+                        }
                     }
+*/                    
+                    tocidfull = e.parent().attr("href").substring(1);
+                    tocid = tocidfull.indexOf("_") > 0 ? tocidfull.substring(0, tocidfull.indexOf("_")) : tocidfull.substring(0);
+   
                     if (Ref.hasRef(tocid) && Ref.isEtym(tocid)) {
-                        xEtym(tocidfull, sn);
+                        xEtym(tocidfull, sn.clone());
                     } else if (Ref.hasRef(tocid) && Ref.isPronun(tocid)) {
-                        xPron(tocidfull, sn);
+                        xPron(tocidfull, sn.clone());
+                    } else if (Ref.hasRef(tocid) && Ref.getType(tocid) > 100 && Ref.getType(tocid) <= 1000) {
+                        xMeaning(tocidfull, sn.clone());
                     } else if (Ref.hasRef(tocid) && Ref.isSynonym(tocid)) {
-                        xSyn(tocidfull, sn);
+                        xSyn(tocidfull, sn.clone());
                     } else if (Ref.hasRef(tocid) && Ref.isAntonym(tocid)) {
-                        xAnt(tocidfull, sn);
-                    } else if (Ref.hasRef(tocid) && Ref.getType(tocid) > 100) {
-                        xMeaning(tocidfull, sn);
+                        xAnt(tocidfull, sn.clone());
                     } else if (!Ref.hasRef(tocid)) {
+                        //Could never be executed now that it has been filtered by bcut indicator.
                         newRef(tocid); //Later have to check Referrence manually to decide if I want to extract it anyway.
                     }
+                    DAO dao = new DAO();
+                    dao.update("update voc set xed = true where word = ?");
+                    dao.setString(1, word);
+                    dao.executeUpdate();
                 } else  { //r is null so far
-                    for (int i1 = 0; i1 < e1s.size(); i1++) {
-                        if (r == null && e1s.get(i1).attr("class").equals("toctext")
-                                && e1s.get(i1).html().equalsIgnoreCase("English")) {
-                            r = e.html();
-                            for (int i2 = 0; i2 < Math.min(6, split.length); i2++) {
-                                osn[i2] = Integer.parseInt(split[i2]);
-                            }
-                            sn[0] = sn[0] + 1;
-                            break;
+                    String s9 = e.parent().attr("href");
+                    String s10 = s9.indexOf("_") > 0 ? s9.substring(1, s9.indexOf("_")) : s9.substring(1);
+                    if (s10.equals("English")) {
+                        for (int i2 = 0; i2 < osn.length; i2++) {
+                            osn[i2] = osnunfiltered[i2];
                         }
+                        r = e.html();
+                        sn[0] = sn[0] + 1;
                     }
                 }
             } //End of outmost for
         } // End of label loops
+        }
     }
 
     private void openJsoupDoc() {
@@ -321,22 +370,22 @@ public class HGetter {
         }
         org.jsoup.nodes.Element e = jsoupdoc.getElementById(t);
         org.jsoup.nodes.Element e0 = e.parent();
-        int k = 0;
         String etym;
         l1:{
             while(e0 != null) {
-                k = k + 1;
                 e0 = e0.nextElementSibling();
                 if (e0 == null) break l1;
-                if (Jsoup.parse(e0.html(),"UTF-8") == null) {
+                org.jsoup.nodes.Document d = Jsoup.parse(e0.html(), "UTF-8");
+                if (d == null) {
                     System.out.println("parse failed" + e0.html());
                 }
-                Elements es0 = Jsoup.parse(e0.html(), "UTF-8").select(".etyl"); //e0.select("etyl") does not work
+                Elements es0 = d.select(".etyl"); //e0.select("etyl") does not work
                 
                 org.jsoup.nodes.Element e1;
                 if (es0.size() > 0) {
                     e1 = es0.get(0); 
-                    etym = e1.html() + " " + Jsoup.parse(e1.nextElementSibling().html(), "UTF-8").text();
+                    etym = Jsoup.parse(e1.html(), "UTF-8").text() + " " + Jsoup.parse(e1.nextElementSibling().html(), "UTF-8").text();
+                    etym = etym.substring(0, Math.min(50, etym.length()));
                     synchronized (DAO.daolock) {
                         try {
                             DAO dao = new DAO();
@@ -347,9 +396,11 @@ public class HGetter {
                             dao.setInt(3, sn[2]);
                             dao.setInt(4, sn[3]);
                             dao.setInt(5, sn[4]);
-                            dao.setInt(6, Ref.getType("Etymology"));
+                            dao.setInt(6, Ref.getType(t.contains("_") ? t.substring(0, t.indexOf("_")) : t));
                             dao.setString(7, etym);
                             dao.executeUpdate();
+//                            dao.update("commit");
+//                            dao.executeUpdate();
                         } catch (Exception ex) {
                             ex.printStackTrace();
                         }
@@ -366,6 +417,76 @@ public class HGetter {
             openJsoupDoc();
             if (jsoupdoc == null) throw new Exception("Cannot find html source. Inconsistant status in DB...");
         }
+        org.jsoup.nodes.Element e = jsoupdoc.getElementById(t);
+        org.jsoup.nodes.Element e0 = e.parent();
+        String pronunuk = "", pronunus = "", pronun = "";
+        Boolean pronunukfound = false, pronunusfound = false, pronunfound = false;
+        l1: {
+            while (e0!=null) {
+                e0 = e0.nextElementSibling();
+                if (e0 == null) break; 
+                if (e0.tagName().equals("ul")) {
+                    org.jsoup.nodes.Document d = Jsoup.parse(e0.outerHtml(), "UTF-8");
+                    org.jsoup.select.Elements es0 = d.select(".IPA");
+                    if (es0.size() > 0) {
+                        for (int i = 0; i < es0.size(); i++) {
+                            org.jsoup.select.Elements es1 = Jsoup.parse(es0.get(i).parent().html()).select(".extiw");
+                            if (es1.select("[title~=British]").size() > 0) {
+                                pronunuk = Jsoup.parse(es0.get(i).html(), "UTF-8").text();
+                                if (es0.get(i).nextElementSibling() != null) {
+                                    if (es0.get(i).nextElementSibling().tagName().equals("IPA")) {
+                                        pronunuk = pronunuk + "," + Jsoup.parse(es0.get(i).nextElementSibling().html(), "UTF-8").text();
+                                    }
+                                }
+                                pronunukfound = true;
+                            }
+                            if (es1.select("[title~=American]").size() > 0) {
+                                pronunus = Jsoup.parse(es0.get(i).html(), "UTF-8").text();
+                                if (es0.get(i).nextElementSibling() != null) {
+                                    if (es0.get(i).nextElementSibling().tagName().equals("IPA")) {
+                                        pronunus = pronunus + "," + Jsoup.parse(es0.get(i).nextElementSibling().html(), "UTF-8").text();
+                                    }
+                                }
+                                pronunusfound = true;
+                            }
+                            if (!(pronunusfound || pronunukfound) && es1.select("[title~=English]").size() > 0) {
+                                pronun = Jsoup.parse(es0.get(i).html(), "UTF-8").text();
+                                if (es0.get(i).nextElementSibling() != null) {
+                                    if (es0.get(i).nextElementSibling().tagName().equals("IPA")) {
+                                        pronun = pronun + "," + Jsoup.parse(es0.get(i).nextElementSibling().html(), "UTF-8").text();
+                                    }
+                                }
+                                pronunfound = true;
+                            }
+                            if ((pronunukfound && pronunusfound) || pronunfound) break;
+                        }
+                    }
+                    break l1; // Upon first "ul" found, execute pronunciation search. And break at the end of search. Meaning second "ul" is not even in the loop
+                }
+            }
+        }// end of l1 label block
+        if (pronunukfound || pronunusfound || pronunfound) {
+            try {
+                DAO dao = new DAO();
+                synchronized (DAO.daolock) {
+                    dao.update("insert into voc3 (word, sn1, sn2, sn3, sn4, type, pronun, pronuk, pronus) values "
+                            + "(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    dao.setString(1, word);
+                    dao.setInt(2, sn[1]);
+                    dao.setInt(3, sn[2]);
+                    dao.setInt(4, sn[3]);
+                    dao.setInt(5, sn[4]);
+                    dao.setInt(6, Ref.getType(t.contains("_") ? t.substring(0, t.indexOf("_")) : t));
+                    dao.setString(7, pronun);
+                    dao.setString(8, pronunuk);
+                    dao.setString(9, pronunus);
+                    dao.executeUpdate();
+                }
+            } catch (Exception ex) {
+                System.err.println("Exception caught in xPron");
+            }
+        }
+
     }
 
     private void xMeaning(String t, int[] sn) throws Exception{
@@ -373,6 +494,55 @@ public class HGetter {
         if (jsoupdoc == null) {
             openJsoupDoc();
             if (jsoupdoc == null) throw new Exception("Cannot find html source. Inconsistant status in DB...");
+        }
+        System.out.print("\nNow in xMeaning!");
+        org.jsoup.nodes.Element e = jsoupdoc.getElementById(t);
+        org.jsoup.nodes.Element e0 = e.parent();
+        String meaning = "";
+        boolean b0 = false;
+        while(e0!=null) {
+            e0 = e0.nextElementSibling();
+            if (e0==null) break; 
+            if (e0.tagName().equals("ol")) {
+                org.jsoup.select.Elements es0 = e0.children();
+                for (int i = 0; i < es0.size(); i ++) {
+                    //System.out.print("\nli:" + es0.get(i).html());
+                    if (es0.get(i).tagName().equals("li")) {
+//                        System.out.print("\nli:" + es0.get(i).html());
+                        org.jsoup.nodes.Element e1 = es0.get(i);
+                        if (e1.html().indexOf("<dl>") >= 0) { 
+                            String limeaning = e1.html().substring(0, e1.html().indexOf("<dl>"));
+                            if (meaning.length() < 800) 
+                            meaning = meaning + Jsoup.parse(limeaning, "UTF-8").text() + "*";
+                        } else {
+                            String limeaning = e1.html();
+                            if (meaning.length() < 800)
+                            meaning = meaning + Jsoup.parse(limeaning, "UTF-8").text() + "*";
+                        }
+                    }
+                }
+                if (meaning.length() > 1) {
+                    synchronized (DAO.daolock) {
+                        try {
+                            DAO dao = new DAO();
+                            dao.update("insert into voc3 (word, sn1, sn2, sn3, sn4, type, meaning) values"
+                                    + "(?, ?, ?, ?, ?, ?, ?)");
+                            dao.setString(1, word);
+                            dao.setInt(2, sn[1]);
+                            dao.setInt(3, sn[2]);
+                            dao.setInt(4, sn[3]);
+                            dao.setInt(5, sn[4]);
+                            dao.setInt(6, Ref.getType(t.contains("_") ? t.substring(0, t.indexOf("_")) : t));
+                            dao.setString(7, meaning.substring(0, meaning.length()-1));
+                            dao.executeUpdate();
+                        } catch (Exception ex) {
+                            //System.err.println("Exception caught in xMeaning");
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+                break; //Only search one ol element then break from while block.
+            }
         }
     }
 

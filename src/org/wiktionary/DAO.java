@@ -98,9 +98,9 @@ public class DAO {
         boolean flag = true;
         try {
             if (daolock) {
-                getPstmt().executeUpdate();
                 daolock = false;
-                System.err.println("Update informaiton:" + getPstmt().toString());
+                getPstmt().executeUpdate();
+                //System.err.println("Update informaiton:" + getPstmt().toString());
                 pstmt = null;
             } else {
                 throw new DAOException("DAOException, sql statement not inited");
@@ -117,13 +117,13 @@ public class DAO {
     }
     
     public synchronized void update(String expression) throws DAOException{
-        pstmt = null;
+//        pstmt = null;
         try {
             if (!daolock) {
                 pstmt = conn.prepareStatement(expression);
                 daolock = true;
             } else {
-                throw new DAOException("Othser statemetn is waiting to be executed! " + pstmt.toString());
+                throw new DAOException("Othser statement is waiting to be executed! " + pstmt.toString());
             }
         } 
         catch (SQLException sqle) {

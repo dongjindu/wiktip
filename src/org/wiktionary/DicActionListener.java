@@ -120,15 +120,6 @@ public class DicActionListener implements ActionListener {
             public void run() {
                 try {
                     initdb();
-                        /*
-                         * try { FileInputStream file = new FileInputStream((String)
-                         * hm.get("wordlist")); BufferedReader reader = new
-                         * BufferedReader(new InputStreamReader(file)); String line =
-                         * null; while ((line=reader.readLine()) != null) {
-                         *
-                         * }
-                         * } catch (IOException e) { e.printStackTrace(); }
-                         */
                 } catch (SQLException ex) {
                     Logger.getLogger(DicActionListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -137,7 +128,7 @@ public class DicActionListener implements ActionListener {
                     synchronized (pslock) {
                         dao.query("select count(word) from voc"
                                 + " where word like ? and (htmled = ? or imaged = ? or xed = ?)");
-                        String likewords = "ne%";
+                        String likewords = "%";
                         dao.setString(1, likewords);
                         dao.setBoolean(2, false);
                         dao.setBoolean(3, false);
@@ -217,9 +208,8 @@ public class DicActionListener implements ActionListener {
                               }
                           }
                     } catch (Exception e) {
-                       System.out.println("-----------++++++++++");
+                       //System.out.println("Exception caught in doInBackground");
                        e.printStackTrace();
-                       //break;
                     };
                     p[key] = current;
                     publish(current);
@@ -230,7 +220,10 @@ public class DicActionListener implements ActionListener {
             @Override
             protected void process(java.util.List<Integer> c) {
                 processed = p[0] + p[1] + p[2] + p[3] + p[4];
-                model.setValueAt(100 * processed / (m[0] + m[1] + m[2] + m[3] + m[4]), 0, 1);
+                int totalm = m[0] + m[1] + m[2] + m[3] + m[4];
+                int percent = 100 * processed / totalm;
+                model.setValueAt(100 * processed / totalm, 0, 1);
+                model.setValueAt("Overall: " + Integer.valueOf(percent).toString() + "%", 0, 0);
                 model.setValueAt(100 * c.get(c.size() - 1) / m[key], key + 1, 1);
                 model.setValueAt(str + ":" + Integer.valueOf(c.get(c.size() - 1)), key+1, 0);
 //                model.setValueAt(c.get(c.size() - 1), key, 0);
@@ -271,9 +264,9 @@ public class DicActionListener implements ActionListener {
     private void createdb() throws SQLException {
         try {
             synchronized (DAO.daolock) {
+                System.out.println("Looks like fresh run. Initializing whole local database!");
                 dao.update("drop table voctxt if exists");
                 dao.executeUpdate();
-                System.out.println("Looks like fresh run. Initializing whole local database!");
                 dao.update("create text table voctxt (word varchar(100))");
                 dao.executeUpdate();
                 dao.update("set table voctxt source \""
@@ -297,25 +290,24 @@ public class DicActionListener implements ActionListener {
                         + "select distinct(word), ?, ?, ?, ?, ? from voctxt");
                 dao.setBoolean(1, false); dao.setBoolean(2, false); dao.setInt(3, 0); dao.setInt(4, 0); dao.setBoolean(5, false);
                 dao.executeUpdate();
+                dao.update("drop table voc3 if exists");
+                dao.executeUpdate();
                 //type: 1: etym, 2, pron, 3:image, 4: meaning, 5:Virtual numbered meaning
                 dao.update("create cached table voc3(word varchar(50),"
                         + "sn1 int,"
                         + "sn2 int,"
                         + "sn3 int,"
                         + "sn4 int,"
-                        + "sn1c varchar(10),"
-                        + "sn2c varchar(10),"
-                        + "sn3c varchar(10),"
-                        + "sn4c varchar(10),"
                         + "type int,"
                         + "etym varchar(50),"
+                        + "pronun varchar(50),"
                         + "pronus varchar(50),"
                         + "pronuk varchar(50),"
                         + "image varchar(50),"
                         + "imageurl varchar(200),"
                         + "antonyms varchar(100),"
                         + "synomyms varchar(100),"
-                        + "meaning varchar(200),"
+                        + "meaning varchar(800),"
                         + "primary key(word, sn1, sn2, sn3, sn4))");
                 dao.executeUpdate();
                 dao.update("drop table types if exists");
@@ -340,6 +332,8 @@ public class DicActionListener implements ActionListener {
                 dao.setString(1, "Antonym"); dao.setInt(2, 13); dao.setString(3, "Ant"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Antonyms"); dao.setInt(2, 14); dao.setString(3, "Ant"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Image"); dao.setInt(2, 15); dao.setString(3, "Pic"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Noun"); dao.setInt(2, 101); dao.setString(3, "n"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
@@ -377,7 +371,8 @@ public class DicActionListener implements ActionListener {
     private void createdir() {
         //throw new UnsupportedOperationException("Not yet implemented");
         String path1 = ((JTextField) hm.get("htmldir")).getText();
-        if (!(new File(path1)).exists()) { new File(path1).mkdir(); new File(path1 + "\\image").mkdir(); }
+        if (!(new File(path1)).exists()) { new File(path1).mkdir();  }
+        if (!(new File(path1 + "\\image").exists())) { new File(path1 + "\\image").mkdir();}
         String path2 = ((JTextField) hm.get("dbdir")).getText();
         if (!(new File(path2)).exists()) { new File(path2).mkdir(); }
         String path3 = ((JTextField) hm.get("dictdir")).getText();

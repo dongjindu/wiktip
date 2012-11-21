@@ -64,7 +64,7 @@ public class Ref {
         return abrbytype.containsValue(abr);
     }
     public static boolean isNonChildType (String ref) {
-        if (typebyref.get(ref.toUpperCase()) < 100) {
+        if (typebyref.get(ref.toUpperCase()) < 10) {
             return true;
         } else {
             return false;

@@ -35,7 +35,7 @@ import org.jsoup.select.Elements;
 public class test {
 
     public static void main(String args[]) throws Exception {
-        test();
+        test5();
     
     }
 
@@ -49,28 +49,77 @@ public class test {
              */
             dao.update("drop table voc3 if exists");
             dao.executeUpdate();
-            dao.update("create cached table voc3(word varchar(50),"
-                    + "sn1 int,"
-                    + "sn2 int,"
-                    + "sn3 int,"
-                    + "sn4 int,"
-                    + "sn1c varchar(10),"
-                    + "sn2c varchar(10),"
-                    + "sn3c varchar(10),"
-                    + "sn4c varchar(10),"
-                    + "type int,"
-                    + "etym varchar(50),"
-                    + "pronus varchar(50),"
-                    + "pronuk varchar(50),"
-                    + "image varchar(50),"
-                    + "imageurl varchar(200),"
-                    + "antonyms varchar(100),"
-                    + "synomyms varchar(100),"
-                    + "meaning varchar(800),"
-                    + "primary key(word, sn1, sn2, sn3, sn4))");
-            dao.executeUpdate();
+                dao.update("create cached table voc3(word varchar(50),"
+                        + "sn1 int,"
+                        + "sn2 int,"
+                        + "sn3 int,"
+                        + "sn4 int,"
+                        + "type int,"
+                        + "etym varchar(50),"
+                        + "pronun varchar(50),"
+                        + "pronus varchar(50),"
+                        + "pronuk varchar(50),"
+                        + "image varchar(50),"
+                        + "imageurl varchar(200),"
+                        + "antonyms varchar(100),"
+                        + "synomyms varchar(100),"
+                        + "meaning varchar(200),"
+                        + "primary key(word, sn1, sn2, sn3, sn4))");
+                dao.executeUpdate();
+                dao.update("drop table types if exists");
+                dao.executeUpdate();
+                dao.update("create memory table types(ref varchar(50), type int, abr varchar(10))");
+                dao.executeUpdate();
+                dao.update("create unique index types1 on types (ref)");
+                dao.executeUpdate();
+                dao.update("create unique index types2 on types (type, abr)");
+                dao.executeUpdate();
+                dao.update("create index types3  on types (abr)");
+                dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Etymology"); dao.setInt(2, 1); dao.setString(3, "O"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Pronunciation"); dao.setInt(2, 2); dao.setString(3, ""); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Synonym"); dao.setInt(2, 11); dao.setString(3, "Syn"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Synonyms"); dao.setInt(2, 12); dao.setString(3, "Syn"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Antonym"); dao.setInt(2, 13); dao.setString(3, "Ant"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Antonyms"); dao.setInt(2, 14); dao.setString(3, "Ant"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Image"); dao.setInt(2, 15); dao.setString(3, "Pic"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Noun"); dao.setInt(2, 101); dao.setString(3, "n"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Verb"); dao.setInt(2, 102); dao.setString(3, "v"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Pronoun"); dao.setInt(2, 103); dao.setString(3, "pr"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Adjective"); dao.setInt(2, 104); dao.setString(3, "Adj"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Adverb"); dao.setInt(2, 105); dao.setString(3, "Adv"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Preposition"); dao.setInt(2, 106); dao.setString(3, "prep"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Particle"); dao.setInt(2, 107); dao.setString(3, "part"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Interjection"); dao.setInt(2, 108); dao.setString(3, "interj"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Conjuction"); dao.setInt(2, 109); dao.setString(3, "conj"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Determinal"); dao.setInt(2, 110); dao.setString(3, "det"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Numeral"); dao.setInt(2, 111); dao.setString(3, "num"); dao.executeUpdate();
+                dao.update("drop table dict if exists");
+                dao.executeUpdate();
+                dao.update("create cached table dict(word varchar(50), txt varchar(3000), primary key(word))");
+                dao.executeUpdate();
             dao.update("update voc set imaged = false");
             dao.executeUpdate();
+                dao.update("checkpoint");
+                dao.executeUpdate();
 /*           dao.query("select * from voc where imaged = true");
             rs = dao.executeQuery();
             while (rs.next()) {
@@ -245,6 +294,8 @@ public class test {
                 dao.update("create index types3  on types (abr)");
                 dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "English");dao.setInt(2, 99);dao.setString(3, "eng"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Etymology"); dao.setInt(2, 1); dao.setString(3, "O"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Pronunciation"); dao.setInt(2, 2); dao.setString(3, ""); dao.executeUpdate();
@@ -257,7 +308,7 @@ public class test {
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Antonyms"); dao.setInt(2, 14); dao.setString(3, "Ant"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
-                dao.setString(1, "image"); dao.setInt(2, 15); dao.setString(3, "Pic"); dao.executeUpdate();
+                dao.setString(1, "Image"); dao.setInt(2, 15); dao.setString(3, "Pic"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Noun"); dao.setInt(2, 101); dao.setString(3, "n"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
@@ -285,13 +336,16 @@ public class test {
                 dao.update("create cached table dict(word varchar(50), txt varchar(3000), primary key(word))");
                 dao.executeUpdate();
            //throw new UnsupportedOperationException("Not yet implemented");
-                dao.update("update types set ref = UPPER(ref)");
-                dao.executeUpdate();
                 dao.update("checkpoint");
                 dao.executeUpdate();
-                
+                dao.query("select ref, type, abr from types");
+                ResultSet rs;
+                rs = dao.executeQuery();
+                while (rs.next()){
+                    System.out.println(rs.getString(1) + "," + Integer.valueOf(rs.getInt(2)).toString() + "," + rs.getString(3));
+                }
         } catch (Exception e) {
-            
+                e.printStackTrace();
         }
         
     }
@@ -373,5 +427,26 @@ public class test {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void test6() {
+        org.jsoup.nodes.Document d = Jsoup.parse("<ol><li>how many kids does d have?</li></ol><ul><li>1:level 1 li<ul><li>level 2 li</li></ul></li><li>2: still level1</li></ul>");
+        for (int i = 0; i<d.select("ul").get(0).children().size(); i ++) {
+            //System.out.println("child" + Integer.valueOf(i).toString() + d.select("ul").get(0).children().get(i).html());
+        }
+        for (int i =0; i< d.children().select("li").size(); i ++ ) {
+      //      System.out.print("now printing " + Integer.valueOf(i).toString() + "th html");
+      //      System.out.println(d.children().select("li").html());
+        }
+        for (int i = 0; i< d.children().get(0).children().size(); i ++) {
+      //      System.out.println("tag: " + d.children().get(0).children().get(i).tagName());
+        }
+        String s = d.children().select("ul>li").get(0).html();
+        System.out.println("until substring <ul>" + s.substring(0, s.indexOf("<ul>")));
+        System.out.println("Empty string length:" + "  ".length());
+        System.out.println("user.home is " + System.getProperty("user.home"));
+        System.out.println("indexOf boundary testing: " + Integer.valueOf("abc".indexOf("a")));
+        
+//        throw new UnsupportedOperationException("Not yet implemented");
     }
 }
