@@ -19,6 +19,8 @@ public class Ref {
     private static HashMap<String, Integer> typebyref = new HashMap();
     private static HashMap<Integer, String> refbytype = new HashMap();
     private static HashMap<Integer, String> abrbytype = new HashMap();
+    private static HashMap<String, String> eoppath = new HashMap();
+    
     static {
         DAO dao = new DAO();
         ResultSet rs;
@@ -30,6 +32,7 @@ public class Ref {
                 refbytype.put(Integer.valueOf(rs.getInt(2)), rs.getString(1).toUpperCase());
                 abrbytype.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
             }
+            iniEop();
         } catch (DAOException ex) {
             Logger.getLogger(Ref.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SQLException e) {
@@ -104,5 +107,23 @@ public class Ref {
         } else {
             return false;
         }
+    }
+
+    private static void iniEop() {
+        eoppath.put("l-e", "le");
+        eoppath.put("l-p", "lp");
+        eoppath.put("l-o", "lo");
+        eoppath.put("le-p", "lep");
+        eoppath.put("le-o", "leo");
+        eoppath.put("lp-e", "lpe");
+        eoppath.put("lp-o", "lpo");
+        eoppath.put("lo-o", "loo");
+        eoppath.put("lep-o", "leop");
+        eoppath.put("lpe-o", "lpeo");
+        eoppath.put("lpeo-p", "lp");
+        eoppath.put("lepo-p", "lep");
+        eoppath.put("lpeo-e", "lpe");
+        eoppath.put("lepo-e", "le");
+        //throw new UnsupportedOperationException("Not yet implemented");
     }
 }

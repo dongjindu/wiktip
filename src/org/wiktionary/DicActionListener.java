@@ -89,6 +89,7 @@ public class DicActionListener implements ActionListener {
             System.exit(0);
         } else if (ae.getActionCommand().equals("Run")) {
             createdir();
+            downloadAndExtract();
             genDict();
         }
     }
@@ -112,7 +113,7 @@ public class DicActionListener implements ActionListener {
         }
     }
 
-    private void genDict() {
+    private void downloadAndExtract() {
         //throw new UnsupportedOperationException("Not yet implemented");
         EventQueue.invokeLater(new Runnable() {
 
@@ -126,9 +127,9 @@ public class DicActionListener implements ActionListener {
                 try {
                     Integer numberofwords = 0;
                     synchronized (pslock) {
-                        dao.query("select count(word) from voc"
-                                + " where word like ? and (htmled = ? or imaged = ? or xed = ?)");
-                        String likewords = "%";
+                        dao.query( "select count(word) from voc"
+                                + " where regexp_matches(word, ?) and (htmled = ? or imaged = ? or xed = ?)");
+                        String likewords = ".*";
                         dao.setString(1, likewords);
                         dao.setBoolean(2, false);
                         dao.setBoolean(3, false);
@@ -149,7 +150,7 @@ public class DicActionListener implements ActionListener {
 //Test words: him, whom, 'em, fly, pardon, built-in etc.
                             String sql = "select word, htmled, imaged, xed from voc where (htmled = ? "
                                     + "or imaged = ? or xed = ?)"
-                                    + "and word like ? limit ?, ?";
+                                    + "and regexp_matches(word, ?) limit ?, ?";
                             dao.query(sql);
                             dao.setBoolean(1, false);
                             dao.setBoolean(2, false);
@@ -257,7 +258,7 @@ public class DicActionListener implements ActionListener {
             rs = dao.executeQuery();
         } catch (DAOException daoe) {
             System.err.println("Exception of no vocabulary table caught!");
-            daoe.printStackTrace();
+//            daoe.printStackTrace();
             createdb();
         }
     }
@@ -290,6 +291,9 @@ public class DicActionListener implements ActionListener {
                         + "select distinct(word), ?, ?, ?, ?, ? from voctxt");
                 dao.setBoolean(1, false); dao.setBoolean(2, false); dao.setInt(3, 0); dao.setInt(4, 0); dao.setBoolean(5, false);
                 dao.executeUpdate();
+                dao.update("update voc set word = left(word, length(word) - 1) where regexp_matches(word, ?)");
+                dao.setString(1, "^.*.:.*");
+                dao.executeUpdate();
                 dao.update("drop table voc3 if exists");
                 dao.executeUpdate();
                 //type: 1: etym, 2, pron, 3:image, 4: meaning, 5:Virtual numbered meaning
@@ -304,10 +308,10 @@ public class DicActionListener implements ActionListener {
                         + "pronus varchar(50),"
                         + "pronuk varchar(50),"
                         + "image varchar(50),"
-                        + "imageurl varchar(200),"
+                        + "imageurl varchar(500),"
                         + "antonyms varchar(100),"
                         + "synomyms varchar(100),"
-                        + "meaning varchar(800),"
+                        + "meaning varchar(2000),"
                         + "primary key(word, sn1, sn2, sn3, sn4))");
                 dao.executeUpdate();
                 dao.update("drop table types if exists");
@@ -335,6 +339,8 @@ public class DicActionListener implements ActionListener {
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Image"); dao.setInt(2, 15); dao.setString(3, "Pic"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "English"); dao.setInt(2, 99); dao.setString(3, "Eng"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Noun"); dao.setInt(2, 101); dao.setString(3, "n"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Verb"); dao.setInt(2, 102); dao.setString(3, "v"); dao.executeUpdate();
@@ -351,11 +357,13 @@ public class DicActionListener implements ActionListener {
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Interjection"); dao.setInt(2, 108); dao.setString(3, "interj"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
-                dao.setString(1, "Conjuction"); dao.setInt(2, 109); dao.setString(3, "conj"); dao.executeUpdate();
+                dao.setString(1, "Conjunction"); dao.setInt(2, 109); dao.setString(3, "conj"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
-                dao.setString(1, "Determinal"); dao.setInt(2, 110); dao.setString(3, "det"); dao.executeUpdate();
+                dao.setString(1, "Determiner"); dao.setInt(2, 110); dao.setString(3, "det"); dao.executeUpdate();
                 dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
                 dao.setString(1, "Numeral"); dao.setInt(2, 111); dao.setString(3, "num"); dao.executeUpdate();
+                dao.update("insert into types (ref, type, abr) values(?, ?, ?)");
+                dao.setString(1, "Article"); dao.setInt(2, 112); dao.setString(3, "num"); dao.executeUpdate();
                 dao.update("drop table dict if exists");
                 dao.executeUpdate();
                 dao.update("create cached table dict(word varchar(50), txt varchar(3000), primary key(word))");
@@ -377,5 +385,47 @@ public class DicActionListener implements ActionListener {
         if (!(new File(path2)).exists()) { new File(path2).mkdir(); }
         String path3 = ((JTextField) hm.get("dictdir")).getText();
         if (!(new File(path3)).exists()) { new File(path3).mkdir(); }
+    }
+
+    private void genDict() {
+        try {
+            int i = 0, j = 0;
+            OutputStream o = new FileOutputStream(new File( ((JTextField) hm.get("dictdir")).getText() + "dict.xml" ));
+            OutputStreamWriter ow = new OutputStreamWriter( o, "UTF-8");
+            BufferedWriter mbrWriter = new BufferedWriter(ow);
+            
+            dao.query("select count(*) from voc3 where type < 10 or type > 100");
+            rs = dao.executeQuery();
+            rs.next();
+            j = rs.getInt(1);
+            
+            dao.query("select word, sn1, sn2, sn3, sn4, type, etym, pronun, pronus, pronuk, image, meaning from voc3"
+                    + "where type < 10 or type > 100 order by word, sn1, sn2, sn3, sn4");
+            rs = dao.executeQuery();
+            String word0 = "", lword0 = "";
+            int sn1 = 0, sn2 = 0, sn3 = 0, sn4 = 0;
+            int lsn1 = 0, lsn2 = 0, lsn3 = 0, lsn4 = 0;
+            while (rs.next()) {
+                word0 = rs.getString(1);
+                sn1 = rs.getInt(2); sn2 = rs.getInt(3); sn3 = rs.getInt(4); sn4 = rs.getInt(5);
+                if (!word0.equals(lword0)) {
+                    if (i == 0) { ow.append("<item><word>" + word0 + "</word>");
+                    } else if (i > 0 && i < (j - 1) ) {
+                        ow.append("</item><item><word>" + word0 + "</word>");
+                    } /*else if (i == j - 1) {
+                        ow.append("</item");
+                    }*/
+                    
+                }
+                lword0 = word0;
+                lsn1 = sn1; lsn2 = sn2; lsn3 = sn3; lsn4 = sn4;
+                i = i + 1;
+            }
+            ow.append("</item>");
+            mbrWriter.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //throw new UnsupportedOperationException("Not yet implemented");
     }
 }
