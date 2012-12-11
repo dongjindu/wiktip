@@ -8,6 +8,7 @@ package org.wiktionary;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.rmi.server.UID;
 import java.sql.*;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import java.util.logging.Level;
@@ -16,16 +17,16 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DAO {
 //    private static DAO instance; //not necessary design for single user environment
     private static Connection conn;
-    private PreparedStatement pstmt;
-    private ResultSet rs;
-    public static Boolean daolock;
-    
+    private static ConcurrentHashMap<Integer, PreparedStatement> chmps = new ConcurrentHashMap();
+    private static final AtomicInteger cter = new AtomicInteger();
+            
     static {
-        daolock = false;
+        cter.set(0);
         createConnection();
     }
     
@@ -34,35 +35,27 @@ public class DAO {
     }
 */    
     //set parameter methods
-    public synchronized void setObject(int parameterIndex, Object x) {
-        
+    public synchronized void setObject(int parameterIndex, Object x, int psIndex) {
         try {
-            if (daolock)
-            getPstmt().setObject(parameterIndex, x);
-        }
-        catch (SQLException sqle) {
+            getPstmt(psIndex).setObject(parameterIndex, x);
+        }  catch (SQLException sqle) {
             System.err.println(" pstmt.setObject(parameterIndex, x) Fail! Error = " + sqle.toString());
         }
         
     }
     
-    public synchronized void setBoolean(int parameterIndex, boolean flag) {
-        
-        try {
-            if (daolock)
-            getPstmt().setBoolean(parameterIndex, flag);
-        }
-        catch (SQLException sqle) {
+    public synchronized void setBoolean(int parameterIndex, boolean flag, int psIndex) {
+       try {
+            getPstmt(psIndex).setBoolean(parameterIndex, flag);
+        } catch (SQLException sqle) {
             System.err.println(" pstmt.setBoolean(parameterIndex, flag) Fail! Error = " + sqle.toString());
         }
         
     }
     
-    public synchronized void setDouble(int parameterIndex, double x) {
-        
+    public synchronized void setDouble(int parameterIndex, double x, int psIndex) {
         try {
-            if (daolock)
-            getPstmt().setDouble(parameterIndex, x);
+            getPstmt(psIndex).setDouble(parameterIndex, x);
         }
         catch (SQLException sqle) {
             System.err.println(" pstmt.setDouble(parameterIndex, x) Fail! Error = " + sqle.toString());
@@ -70,99 +63,80 @@ public class DAO {
         
     }
     
-    public synchronized void setInt(int parameterIndex, int x) {
-        
+    public synchronized void setInt(int parameterIndex, int x, int psIndex) {
         try {
-            if (daolock)
-            getPstmt().setInt(parameterIndex, x);
-        }
-        catch (SQLException sqle) {
+            getPstmt(psIndex).setInt(parameterIndex, x);
+        } catch (SQLException sqle) {
             System.err.println(" pstmt.setInt(parameterIndex, x) Fail! Error = " + sqle.toString());
+        } catch (Exception e) {
+            System.err.println("Possibly null pointer in setInt");
         }
-        
     }
     
-    public synchronized void setString(int parameterIndex, String s) throws DAOException {
+    public synchronized void setString(int parameterIndex, String s, int psIndex) {
         
         try {
-            if (daolock)
-            getPstmt().setString(parameterIndex, s);
-        }
-        catch (SQLException sqle) {
-            System.err.println(" pstmt.setString(parameterIndex, s) Fail! Error = " + sqle.toString() + " SQL state?" + getPstmt().toString());
-            throw new DAOException("DAOException setString:", sqle);
+            getPstmt(psIndex).setString(parameterIndex, s);
+        } catch (SQLException sqle) {
+            System.err.println(" pstmt.setString(parameterIndex, s) Fail! Error = " + sqle.toString() + " SQL state?" + getPstmt(psIndex).toString());
+        } catch (Exception e) {
+            System.err.println("Possibly null pointer in setInt");
         }
     }
     
-    public synchronized boolean executeUpdate() throws DAOException {
+    public synchronized boolean executeUpdate(int psIndex) throws DAOException {
         boolean flag = true;
         try {
-            if (daolock) {
-                daolock = false;
-                getPstmt().executeUpdate();
-                //System.err.println("Update informaiton:" + getPstmt().toString());
-                pstmt = null;
-            } else {
-                throw new DAOException("DAOException, sql statement not inited");
-            }
+                getPstmt(psIndex).executeUpdate();
+                chmps.remove(psIndex);
         }
         catch (SQLException sqle) {
             flag = false;
-            System.out.println("executeUpdate() Error!" + sqle.toString() + getPstmt().toString());
-            throw new DAOException("DAOException of udpate:", sqle);
+            System.out.println("executeUpdate() Error!" + sqle.toString() + getPstmt(psIndex).toString());
+            throw new DAOException("SQL exception in dao.executeUpdate:", sqle);
         }
-        
         return flag;
         
     }
     
-    public synchronized void update(String expression) throws DAOException{
+    public synchronized int update(String expression) throws DAOException{
 //        pstmt = null;
+        int k = cter.getAndIncrement();
         try {
-            if (!daolock) {
-                pstmt = conn.prepareStatement(expression);
-                daolock = true;
-            } else {
-                throw new DAOException("Othser statement is waiting to be executed! " + pstmt.toString());
-            }
-        } 
-        catch (SQLException sqle) {
-            System.err.println("Update DataBase Preparation Fail! Error = " + sqle.toString());
+            chmps.put(k, conn.prepareStatement(expression));
+        } catch (SQLException sqle) {
+            System.err.print("\nUpdate DataBase Preparation Fail! Error = " + sqle.toString());
+            throw new DAOException("SQL statement preparation in dao.Update:", sqle);
         }
+        return k;
+        
     }
     
-    public synchronized ResultSet executeQuery() throws DAOException {
-        rs = null;
+    public synchronized ResultSet executeQuery(int psIndex) {
+        ResultSet rs;
         try {
-            if (daolock) {
-                rs = getPstmt().executeQuery();
-                daolock = false;
-                pstmt = null;
-            } else {
-                throw new DAOException("DAOException when query, sql statement not initiated");
-            }
+                rs = getPstmt(psIndex).executeQuery();
+                chmps.remove(psIndex);
+                return rs;
         }
         catch (SQLException sqle) {
-            System.err.println("Query DataBase Fail! Error = " + sqle.toString());
-            throw new DAOException("DAO query exception:", sqle);
+            System.err.print("\nQuery DataBase Fail! Returning null resultset!! Error: = " + sqle.toString());
+            //sqle.printStackTrace();
+            return null;
+            //throw new DAOException("SQL exception in dao.executeQuery:", sqle);
         }
-        return rs;
     }
         
-    public synchronized void query(String expression) throws DAOException {
-        pstmt = null;
-        try {
-            if (!daolock) {
-                pstmt = conn.prepareStatement(expression);
-                daolock = true;
-            } else {
-                throw new DAOException("Other statement is waiting to be executed!" + pstmt.toString());
+    public synchronized int query(String expression) throws DAOException {
+        //pstmt = null;
+        int k = cter.getAndIncrement();
+            try {
+                chmps.put(k, conn.prepareStatement(expression));
+            } catch (SQLException sqle) {
+                System.err.print("\nQuery DataBase Preparation Fail! Error = " + sqle.toString());
+                throw new DAOException("SQL statement preparation in dao.Query:", sqle);
             }
-        } 
-        catch (SQLException sqle) {
-            System.err.println("Query DataBase Fail! Error = " + sqle.toString() + " " + expression);
-            throw new DAOException("DAO query prepare exception", sqle);
-        }
+            return k;
     }
     
     public synchronized static void closeConnection() {
@@ -233,8 +207,21 @@ public class DAO {
         
     }
 */
-    private PreparedStatement getPstmt() {
-        return pstmt; 
+    private PreparedStatement getPstmt(int psIndex) {
+        try {
+            if (chmps.get(psIndex) != null) {
+                //
+            } else {
+                System.out.print("\n nullified preparedstatement? psIndex is");
+                System.out.print(Integer.valueOf(psIndex).toString() + ". In chmps, try to print it to check: " + chmps.get(psIndex).toString());
+                throw new DAOException("nullified preparedstatement");
+            }
+        } catch (Exception e) {
+            System.out.println("Exception caught in getPstmt");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return chmps.get(psIndex);
     }
 }
 class DAOException extends Exception {

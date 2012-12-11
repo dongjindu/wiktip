@@ -201,7 +201,7 @@ public class MWindow {
         hm.put("maxlength", tmaxlength);
         hm.put("maxitem50", tmaxitem50);
         hm.put("maxitem500", tmaxitem500);
-        hm.put("maxitem", tmaxitem);
+        hm.put("maxitem", tmaxitem); //Maxitem per each word type each word
         hm.put("ranklevel", tranklevel);
         hm.put("wordlist", twordlist);
         hm.put("htmldir", thtmldir);
@@ -319,9 +319,9 @@ class ProgressRenderer extends DefaultTableCellRenderer {
             if (row == 0 ) {
                 b.setForeground(Color.green);
             } else if (row%2 == 0) {
-                b.setForeground(Color.darkGray);
+                b.setForeground(Color.blue);
             } else if (row%2 == 1) {
-                b.setForeground(Color.ORANGE);
+                b.setForeground(Color.pink);
             }
             return b;
         }

@@ -25,8 +25,8 @@ public class Ref {
         DAO dao = new DAO();
         ResultSet rs;
         try {
-            dao.query("select ref, type, abr from types");
-            rs = dao.executeQuery();
+            int idao = dao.query("select ref, type, abr from types");
+            rs = dao.executeQuery(idao);
             while (rs.next()) {
                 typebyref.put(rs.getString(1).toUpperCase(), Integer.valueOf(rs.getInt(2)));
                 refbytype.put(Integer.valueOf(rs.getInt(2)), rs.getString(1).toUpperCase());
