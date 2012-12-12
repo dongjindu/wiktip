@@ -4,7 +4,6 @@
  */
 package org.wiktionary;
 
-import com.sun.xml.internal.ws.addressing.W3CAddressingConstants;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -19,17 +18,13 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Node;
+import org.jsoup.select.Elements;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-//import org.w3c.dom.Node;
-import org.jsoup.parser.Parser;
-import org.jsoup.select.Elements;
 
 /**
  *
