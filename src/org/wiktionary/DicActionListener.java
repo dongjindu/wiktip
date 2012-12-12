@@ -4,38 +4,18 @@
  */
 package org.wiktionary;
 
-import java.nio.Buffer;
-import java.io.*;
-import java.nio.charset.Charset;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.lang.Exception;
+import java.io.*;
 import java.sql.ResultSet;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JTextField;
-import javax.swing.JComboBox;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.sql.SQLException;
-import java.sql.SQLDataException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableColumn;
 import javax.swing.table.DefaultTableModel;
-import org.apache.commons.lang.StringEscapeUtils;
-
-import org.lobobrowser.html.parser.*;
-import org.lobobrowser.html.test.*;
-import org.lobobrowser.html.*;
-import org.w3c.dom.*;
 
 //import java.a
 public class DicActionListener implements ActionListener {
