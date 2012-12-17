@@ -18,6 +18,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 //import java.a
+
 public class DicActionListener implements ActionListener {
 
     private HashMap<String, Object> hm;
@@ -52,6 +53,7 @@ public class DicActionListener implements ActionListener {
          * if (ae.getSource() instanceof JButton) { System.out.println("Command"
          * + ((JButton) ae.getSource()).getActionCommand()); }
          */
+        //System.out.println("Action performed!");
         if (ae.getActionCommand().equals("Save")) {
             saveprop(ae);
             createDir();
@@ -80,8 +82,8 @@ public class DicActionListener implements ActionListener {
             System.exit(0);
         } else if (ae.getActionCommand().equals("Run")) {
             createDir();
-            downloadAndExtract();
-            //genDict();
+            //downloadAndExtract();
+            genDict();
 /*
              * synchronized(tsf) { while (tsf < NUMBER_OF_TASKS) { try{
              * tsf.wait(); } catch (InterruptedException ie) { if (tsf < 10 ) {
@@ -530,7 +532,7 @@ public class DicActionListener implements ActionListener {
             int i = 0, j = 0;
             int iword = 0, iword00 = 0; //length per word
             int i1 = 0, i2 = 0, i3 = 0, i4 = 0;
-            OutputStream o = new FileOutputStream(new File(((JTextField) hm.get("dictdir")).getText() + "\\dict5-200.xml"));
+            OutputStream o = new FileOutputStream(new File(((JTextField) hm.get("dictdir")).getText() + "\\dict6-200.xml"));
             OutputStreamWriter ow = new OutputStreamWriter(o, "UTF-8");
             BufferedWriter mbrWriter = new BufferedWriter(ow);
             /*
@@ -540,13 +542,15 @@ public class DicActionListener implements ActionListener {
             int idao = dao.query("select word, sn1, sn2, sn3, sn4, type, etym, pronun, pronus, pronuk, image, meaning, plural,"
                     + " vsubcat, v3rd, vpresentp, vsimplepast, vpastp, compare8, compare9 from voc3 "
                     + "where (type < 10 or (type = 15 and sn1 = 100) or type > 100) "
-                    + "and (sn1 < 1000) "
-                    + "and regexp_matches(word, ?)"
+                    + "and (sn1 < 1000)"
+                    + "and regexp_matches(word, ?) and (not(word = ?))"
                     + "order by word, sn1, sn2, sn3, sn4 "
                     + "");
             //'abcdef, ghijklmn, opqrs, tuvwxyz
             String regexpwords = ".*";
+            String word2no = "upside_down";
             dao.setString(1, regexpwords, idao);
+            dao.setString(2, word2no, idao);
             rs = dao.executeQuery(idao);
 
             int idao1 = dao.query("select count(*) from voc3 where type < 10 or type > 100");
@@ -714,7 +718,8 @@ public class DicActionListener implements ActionListener {
                 ow.append("</d1>");
             }
 
-            ow.append("</d0></item></dict>");
+            ow.append("</d0></item>");
+            irrV(ow);
             mbrWriter.close();
             Object[] opts = {"OK"};
             JOptionPane.showConfirmDialog(((JPanel) hm.get("p")).getRootPane().getParent(), "XML file Generated!", "Congratulations", JOptionPane.PLAIN_MESSAGE);
@@ -954,8 +959,107 @@ public class DicActionListener implements ActionListener {
         }
         return smg;
     }
-}
 
+    private void irrV(OutputStreamWriter ow) {
+        try {
+
+            int i = dao.query("select WORD, V3RD, VPRESENTP, VSIMPLEPAST, VPASTP from VOC3 where "
+                    + "word != ?  and "
+                    + "(LENGTH(VPRESENTP) > 1 or LENGTH(V3RD) > 1 "
+                    + "or LENGTH(VSIMPLEPAST) > 1 or LENGTH(VPASTP) > 1)");
+            dao.setString(1, "affection", i); //looks like affection is wrong right now.
+            ResultSet rs = dao.executeQuery(i);
+
+            String slw = "", s1 = "", s2 = "", s3 = "", s4 = "", s5 = "";
+            //ow.append("<irrv>");
+            ow.append("\n");
+            boolean odd = false;
+            while (rs.next()) {
+                s1 = rs.getString(1); //the word itself
+                s2 = rs.getString(2);
+                s3 = rs.getString(3);
+                s4 = rs.getString(4);
+                s5 = rs.getString(5);
+                if (s2 == null) {
+                    s2 = "";
+                }
+                if (s3 == null) {
+                    s3 = "";
+                }
+                if (s4 == null) {
+                    s4 = "";
+                }
+                if (s5 == null) {
+                    s5 = "";
+                }
+                if (!slw.equals(s1)) {
+                    //WORD, V3RD, VPRESENTP, VSIMPLEPAST, VPASTP
+                    if (s1.equals("abate")) {
+                        System.out.println(s1 + "s ," + s2);
+                        System.out.println(s1.substring(0, s1.length() - 1) + "ing ," + s3);
+                        System.out.println(s1.substring(0, s1.length()) + "d ," + s4);
+                        System.out.println(s1.substring(0, s1.length()) + "d ," + s5);
+                    }
+                    if (!( s2.equals(s1 + "s")
+                            || (s2.equals(s1.substring(0, s1.length() - 1) + "ies") && s1.substring(s1.length() - 1).equals("y"))
+                            || (s2.equals(s1 + "es") && s1.substring(s1.length() - 1).matches("[sox]")) 
+                            || (s2.equals(s1 + "zes") && s1.substring(s1.length() - 1).matches("[z]")) 
+                            || (s2.equals(s1 + "es") && s1.substring(s1.length() - 2).equals("ch"))
+                            || (s2.equals(s1 + "es") && s1.substring(s1.length() - 2).equals("sh")) )
+                        || !(s3.equals(s1 + "ing")
+                            || (s3.equals(s1.substring(0, s1.length() - 1) + "ing") && s1.substring(s1.length() - 1).equals("e"))
+                            || (s3.equals(s1 + s1.substring(s1.length() - 1) + "ing") 
+                                 && (s1.substring(s1.length() -1).matches("[bdgklmnprtz]") ) ))
+                        || !(s4.equals(s1 + "ed")
+                            || (s4.equals(s1 + "d") && s1.substring(s1.length() - 1).equals("e")) 
+                            || (s4.equals(s1 + s1.substring(s1.length() - 1) + "ed") 
+                                && (s1.substring(s1.length() -1).matches("[bdgklmnprtz]") ) )
+                            || (s5.equals(s1.substring(0, s1.length() - 1) + "ied") && s1.substring(s1.length() - 1 ).equals("y")) )
+
+                        || !(s5.equals(s1 + "ed")
+                            || (s5.equals(s1 + "d") && s1.substring(s1.length() - 1).equals("e")) 
+                            || (s5.equals(s1 + s1.substring(s1.length() - 1) + "ed") 
+                                && (s1.substring(s1.length() -1).matches("[bdgklmnprtz]")) )
+                            || (s5.equals(s1.substring(0, s1.length() - 1) + "ied") && s1.substring(s1.length() - 1 ).equals("y")) )
+                       ){
+                        odd = !odd;
+                        if (odd) {ow.append("<ir0><ir1>");
+                        } else if(!odd) {
+                            ow.append("<ir00><ir1>");
+                        }
+                        ow.append(rs.getString(1));
+                        ow.append("</ir1>");
+                        ow.append("<ir2>");
+                        ow.append(rs.getString(2));
+                        ow.append("</ir2>"); //v3rd 
+                        ow.append("<ir3>");
+                        ow.append(rs.getString(3));
+                        ow.append("</ir3>"); //vpresentp
+                        ow.append("<ir4>");
+                        ow.append(rs.getString(4));
+                        ow.append("</ir4>"); //vsimpalepast
+                        ow.append("<ir5>");
+                        ow.append(rs.getString(5));
+                        ow.append("</ir5>"); //vpastp
+                        if (odd) {
+                        ow.append("</ir0>");
+                        } else if (!odd) {
+                            ow.append("</ir00>");
+                        }
+                        ow.append("\n");
+                    }
+                }
+                slw = s1;
+            }
+//            ow.append("</irrv>");
+            ow.append("</dict>");
+        } catch (Exception e) {
+            //
+        }
+        //throw new UnsupportedOperationException("Not yet implemented");
+
+    }
+}
 class LS {
     int l;
     String s;

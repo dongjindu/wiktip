@@ -786,20 +786,28 @@ public class HGetter {
                     //transitive && intransitive;
                     if (!bv1 ) {
                         if (e0.tagName().equals("p")) {
+/*
+                            if (word.equals("bandy")) {
+                                System.out.print("Bandy verbs's html : " + e0.outerHtml().toString());
+                                System.out.print("\nThe third person singular form of bandy is : " + Jsoup.parse(e0.select("span").select("[class*=third-person-singular-form-of]").get(0).html(), "UTF-8").ownText());
+                                System.exit(-1);
+                            }
+                            * 
+                            */
                             if (!(e0.select("span").select("[class*=third-person-singular-form-of]").isEmpty())) {
-                                sv3rd = Jsoup.parse(e0.select("span").select("[class*=third-person-singular-form-of]").get(0).html(), "UTF-8").ownText();
+                                sv3rd = Jsoup.parse(e0.select("span").select("[class*=third-person-singular-form-of]").get(0).html(), "UTF-8").text();
                                 bv1 = true;
                             }
                             if (!(e0.select("span").select("[class*=present-participle-form-of]").isEmpty())) {
-                                svpresentp = Jsoup.parse(e0.select("span").select("[class*=present-participle-form-of]").get(0).html(), "UTF-8").ownText();
+                                svpresentp = Jsoup.parse(e0.select("span").select("[class*=present-participle-form-of]").get(0).html(), "UTF-8").text();
                                 bv1 = true;
                             }
                             if (!(e0.select("span").select("[class*=simple-past]").isEmpty())) {
-                                svsimplepast = Jsoup.parse(e0.select("span").select("[class*=simple-past]").get(0).html(), "UTF-8").ownText();
+                                svsimplepast = Jsoup.parse(e0.select("span").select("[class*=simple-past]").get(0).html(), "UTF-8").text();
                                 bv1 = true;
                             }
                             if (!( e0.select("span").select("[class*=past]").select("[class*=participle]").isEmpty() )) {
-                                svpastp = Jsoup.parse(e0.select("span").select("[class*=past]").select("[class*=participle-form-of]").get(0).html(), "UTF-8").ownText();
+                                svpastp = Jsoup.parse(e0.select("span").select("[class*=past]").select("[class*=participle-form-of]").get(0).html(), "UTF-8").text();
                                 bv1 = true;
                             }
                             

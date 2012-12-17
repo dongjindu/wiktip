@@ -5,3 +5,4 @@ dictbackup/
 dist/
 db/
 build/
+nbproject/

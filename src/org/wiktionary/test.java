@@ -204,7 +204,7 @@ public class test {
     private static int initnumber = 0;
     public static void main(String args[]) throws Exception {
         //test16();
-        test9();
+        test2();
     }
     test(HashMap<String, String> phm) {
         hm = phm;
@@ -284,15 +284,21 @@ public class test {
         //throw new UnsupportedOperationException("Not yet implemented");
         File input;
         try {
-            input = new File((new File(".").getCanonicalPath()) + "\\html\\fly.html");
+//            input = new File((new File(".").getCanonicalPath()) + "\\html\\fly.html");
+            input = new File("c:/temp/dongjin.xml");
             org.jsoup.nodes.Document doc = Jsoup.parse(input, "UTF-8", "");
-            Elements es = doc.select("span.tocnumber");
+            //Elements es = doc.select("span.tocnumber");
+            Elements es = doc.select("span").select("[class*=third-person-singular-form-of]");
+            System.out.println(Jsoup.parse(es.get(0).html(), "UTF-8").text());
             for (int i = 0; i < es.size(); i++) {
-                System.out.println("toc number find: " + es.get(i).parent().outerHtml().toString());
+/*                System.out.println("toc number find: " + es.get(i).parent().outerHtml().toString());
                 System.out.println("Sibling element  html: " + es.get(i).siblingElements().get(0).html());
                 System.out.println("id of parent: " + es.get(i).parent().attr("href"));
                 System.out.println("Attribute to get classname: " + es.get(i).attr("class"));
+*/
+//                System.out.println(es.get(i).outerHtml());
             }
+            System.out.println("Testing for last character" + "testing".substring("testing".length()-1));
         } catch (IOException ex) {
             Logger.getLogger(test.class.getName()).log(Level.SEVERE, null, ex);
         }

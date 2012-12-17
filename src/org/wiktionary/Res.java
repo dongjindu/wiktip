@@ -39,9 +39,15 @@ public class Res {
     private static DAO dao;
     static {
         try {
+            File pfile= new File("config.properties");
+            if (!pfile.exists()) {
+                pfile.createNewFile();
+            }
             prop = new PropertiesConfiguration(PROPERTYFILE);
         } catch (ConfigurationException ce) {
             ce.printStackTrace();
+        } catch (java.io.IOException ioe) {
+            ioe.printStackTrace();
         }
         try {
             if (prop.getString("dbdir") == null ) {

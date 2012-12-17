@@ -1,5 +1,7 @@
 package org.wiktionary;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
@@ -30,7 +32,8 @@ public class FL implements FocusListener {
                 File inifile = new File(".");
 
                 if (((JTextField) hm.get("wordlist")).getText().length() > 0) {
-                    jfc = new JFileChooser(inifile.getAbsolutePath() +((JTextField) hm.get("dbdir")).getText());
+                    System.out.println(inifile.getAbsolutePath() +((JTextField) hm.get("dbdir")).getText());
+                    jfc = new JFileChooser(inifile.getAbsolutePath() + "/" +((JTextField) hm.get("dbdir")).getText());
                 } else {
                     jfc = new JFileChooser();
                 }
@@ -40,7 +43,11 @@ public class FL implements FocusListener {
                     try {
                         File file = jfc.getSelectedFile();
                         //((JTextField) hm.get("wordlist")).setText(file.getCanonicalPath());
-                        ((JTextField) hm.get("wordlist")).setText(file.getName());
+                        JTextField twl = ((JTextField) hm.get("wordlist"));
+                        twl.setText(file.getName());
+                        Font f = new Font(twl.getFont().getName(), Font.CENTER_BASELINE, twl.getFont().getSize());
+                        twl.setFont(f);
+                        twl.setForeground(Color.BLACK);
                     } catch (Exception ex) {
                         Logger.getLogger(MWindow.class.getName()).log(Level.SEVERE, null, ex);
                     }

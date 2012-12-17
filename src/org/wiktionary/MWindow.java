@@ -23,6 +23,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.JSplitPane;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -101,11 +102,15 @@ public class MWindow {
         tranklevel.setEditable(false);
         //tranklevel.addActionListener(tranklevel);
 
-        final JTextField twordlist = new JTextField((Res.getProp().getString("wordlist") == null) ? "" : Res.getProp().getString("wordlist"));
+        final JTextField twordlist = new JTextField((Res.getProp().getString("wordlist") == null) ? "Copy the word list file into db directory manually first!" : Res.getProp().getString("wordlist"));
         final JTextField thtmldir = new JTextField((Res.getProp().getString("htmldir") == null) ? "html" : Res.getProp().getString("htmldir"));
         final JTextField tdictdir = new JTextField((Res.getProp().getString("dictdir") == null) ? "dict" : Res.getProp().getString("dictdir"));
         final JTextField tdbdir = new JTextField((Res.getProp().getString("dbdir") == null) ? "db" : Res.getProp().getString("dbdir"));
-        
+        if (twordlist.getText().equals("Copy the word list file into db directory manually first!")) {
+            Font f = new Font(twordlist.getFont().getName(), Font.ITALIC, twordlist.getFont().getSize());
+            twordlist.setFont(f);
+            twordlist.setForeground(Color.GRAY);
+        }
         final JButton runbutton = new JButton("Run");
         final JButton savebutton = new JButton("Save");
         final JButton saveexitbutton = new JButton("Save and Exit");
@@ -114,40 +119,48 @@ public class MWindow {
         GridBagConstraints c = new GridBagConstraints();
         Insets insets0 = new Insets(5, 50, 5, 5);
         Insets insets1 = new Insets(5, 5, 5, 45);
+        int iy = 0;
         c.weightx = 0.1;
         c.weighty = 0.1;
         c.insets = insets0;
         c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridy = 0;
+        c.gridy = iy;
         c.gridx = 0;
         p.add(lmaxlength, c);
 //            c.insets = new Insets(5, 50, 5, 2);
-        c.gridy = 0;
+        c.gridy = iy;
         c.gridx = 1;
         c.insets = insets1;
         p.add(tmaxlength, c);
-        c.gridy = 1;
+/*        
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(lmaxitem50, c);
         c.gridx = 1;
         c.insets = insets1;
         p.add(tmaxitem50, c);
-        c.gridy = 2;
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(lmaxitem500, c);
         c.gridx = 1;
         c.insets = insets1;
         p.add(tmaxitem500, c);
-        c.gridy = 3;
+*/        
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(lmaxitem, c);
         c.gridx = 1;
         c.insets = insets1;
         p.add(tmaxitem, c);
-        c.gridy = 4;
+/*        
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(lranklevel, c);
@@ -155,28 +168,33 @@ public class MWindow {
         c.gridx = 1;
         c.insets = insets1;
         p.add(tranklevel, c);
-        c.gridy = 6;
+*/
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(lwordlist, c);
         c.gridx = 1;
         c.insets = insets1;
         p.add(twordlist, c);
-        c.gridy = 7;
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(lhtmldir, c);
         c.gridx = 1;
         c.insets = insets1;
         p.add(thtmldir, c);
-        c.gridy = 8;
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(ldictdir, c);
         c.gridx = 1;
         c.insets = insets1;
         p.add(tdictdir, c);
-        c.gridy = 9;
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(ldbdir, c);
@@ -184,14 +202,16 @@ public class MWindow {
         c.insets = insets1;
         p.add(tdbdir, c);
 
-        c.gridy = 10;
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(runbutton, c);
         c.gridx = 1;
         c.insets = insets1;
         p.add(saveexitbutton, c);
-        c.gridy = 11;
+        iy ++;
+        c.gridy = iy;
         c.gridx = 0;
         c.insets = insets0;
         p.add(savebutton, c);
@@ -199,10 +219,10 @@ public class MWindow {
         c.insets = insets1;
         p.add(exitbutton, c);
         hm.put("maxlength", tmaxlength);
-        hm.put("maxitem50", tmaxitem50);
-        hm.put("maxitem500", tmaxitem500);
+//        hm.put("maxitem50", tmaxitem50);
+//        hm.put("maxitem500", tmaxitem500);
         hm.put("maxitem", tmaxitem); //Maxitem per each word type each word
-        hm.put("ranklevel", tranklevel);
+//        hm.put("ranklevel", tranklevel);
         hm.put("wordlist", twordlist);
         hm.put("htmldir", thtmldir);
         hm.put("dictdir", tdictdir);
@@ -243,7 +263,8 @@ public class MWindow {
         String oldappname= "";
         try {
              oldappname = Res.getProp().getString("appname");
-             if ((oldappname == null) || oldappname.length() < 10) {
+             if (oldappname == null) oldappname = "";
+             if ( oldappname.equals("") || oldappname.length() < 10) {
                  while ((appname == null) || appname.length() < 1) {
                      appname = JOptionPane.showInputDialog("Give your dictionary generator a name", oldappname);
                  }
@@ -252,7 +273,7 @@ public class MWindow {
              e.printStackTrace();
         }
         try {
-            if (!(oldappname == appname) && oldappname.length() < 10) {
+            if (!oldappname.equals(appname) && oldappname.length() < 3) {
                 Res.getProp().setProperty("appname", appname);
                 Res.getProp().save();
             }
@@ -272,14 +293,14 @@ public class MWindow {
         
         table.setSize(p.getWidth()-10, p.getHeight()-10);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        table.getColumnModel().getColumn(0).setPreferredWidth(100);
+        table.getColumnModel().getColumn(0).setPreferredWidth(200);
         table.getColumnModel().getColumn(1).setPreferredWidth(500);
         
         TableColumn column = table.getColumnModel().getColumn(1);
         column.setCellRenderer(new ProgressRenderer());
 
         JSplitPane splp = new JSplitPane(JSplitPane.VERTICAL_SPLIT, ppara, pstatus);
-        splp.setDividerLocation(360 + splp.getInsets().top);
+        splp.setDividerLocation(330 + splp.getInsets().top);
         ((Container) hm.get("cp")).add(BorderLayout.CENTER, splp);
         
         hm.put("model", model);
